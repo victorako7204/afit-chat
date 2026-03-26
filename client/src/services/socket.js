@@ -117,11 +117,26 @@ export const disconnectSocket = () => {
 };
 
 export const joinRoom = (chatId) => {
-  if (socketInstance) {
-    currentRoom = chatId;
-    if (connected) {
+  console.log(`🔵 joinRoom called for: ${chatId}, connected: ${connected}, socketInstance: ${!!socketInstance}`);
+  
+  if (!socketInstance) {
+    console.error('❌ socketInstance is null!');
+    return;
+  }
+  
+  currentRoom = chatId;
+  
+  if (connected) {
+    console.log(`✅ Emitting joinChatRoom for: ${chatId}`);
+    socketInstance.emit('joinChatRoom', { chatId });
+  } else {
+    console.warn(`⏳ Socket not connected yet, waiting...`);
+    const handleConnect = () => {
+      console.log(`✅ Socket connected, now joining: ${chatId}`);
       socketInstance.emit('joinChatRoom', { chatId });
-    }
+      socketInstance.off('connect', handleConnect);
+    };
+    socketInstance.once('connect', handleConnect);
   }
 };
 

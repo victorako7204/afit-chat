@@ -112,11 +112,19 @@ const DirectChat = () => {
     setLoading(true);
     setShowSidebar(false);
     setReplyingTo(null);
+    
+    const timeout = setTimeout(() => {
+      console.warn('Chat history load timeout - messages may not load');
+      setLoading(false);
+    }, 5000);
+    
     if (user && selectedUserData) {
       const chatId = generateChatId(user._id, selectedUserData._id);
       joinRoom(chatId);
       authAPI.clearUnread(chatId).catch(console.error);
     }
+    
+    return () => clearTimeout(timeout);
   }, [user, generateChatId, setPartnerWithClear]);
 
   const handleStartConversation = (userData) => {
@@ -148,11 +156,13 @@ const DirectChat = () => {
   };
 
   useEffect(() => {
-    fetchActiveConversations();
-    fetchAllUsers();
-    fetchUnreadFromServer();
-    connectSocket();
-  }, [fetchActiveConversations, fetchAllUsers, fetchUnreadFromServer]);
+    if (user?._id) {
+      fetchActiveConversations();
+      fetchAllUsers();
+      fetchUnreadFromServer();
+      connectSocket(user._id);
+    }
+  }, [user?._id, fetchActiveConversations, fetchAllUsers, fetchUnreadFromServer, user]);
 
   useEffect(() => {
     const handleReceiveMessage = (message) => {
@@ -217,11 +227,20 @@ const DirectChat = () => {
       alert(`Delete Error: ${data.message}`);
     };
 
+    const handleSocketConnect = () => {
+      console.log('🔌 Socket reconnected, rejoining chat...');
+      if (selectedUser && user) {
+        const chatId = generateChatId(user._id, selectedUser._id);
+        socket.emit('joinChatRoom', { chatId });
+      }
+    };
+
     socket.on('receiveMessage', handleReceiveMessage);
     socket.on('chatHistory', handleChatHistory);
     socket.on('messageDeleted', handleMessageDeleted);
     socket.on('messageError', handleMessageError);
     socket.on('deleteError', handleDeleteError);
+    socket.on('connect', handleSocketConnect);
 
     return () => {
       socket.off('receiveMessage', handleReceiveMessage);
@@ -229,6 +248,7 @@ const DirectChat = () => {
       socket.off('messageDeleted', handleMessageDeleted);
       socket.off('messageError', handleMessageError);
       socket.off('deleteError', handleDeleteError);
+      socket.off('connect', handleSocketConnect);
     };
   }, [selectedUser, user, generateChatId, updateConversationInList]);
 

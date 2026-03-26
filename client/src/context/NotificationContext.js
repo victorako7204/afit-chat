@@ -24,6 +24,20 @@ const saveToStorage = (data) => {
   }
 };
 
+const fetchFromAPI = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${process.env.REACT_APP_API_URL}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+      ...options.headers
+    }
+  });
+  if (!response.ok) throw new Error('API request failed');
+  return response.json();
+};
+
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState({});
@@ -107,8 +121,22 @@ export const NotificationProvider = ({ children }) => {
     setCurrentChatPartner(partner);
     if (partner?._id) {
       clearUnread(partner._id);
+      fetchFromAPI(`/chat/unread/clear/${partner._id}`, { method: 'PUT' }).catch(console.error);
     }
   }, [clearUnread]);
+
+  const fetchUnreadFromServer = useCallback(async () => {
+    if (!user?._id) return;
+    try {
+      const data = await fetchFromAPI('/chat/unread/count');
+      if (typeof data.unreadCount === 'number') {
+        setUnreadMessages({ serverCount: data.unreadCount });
+        saveToStorage({ serverCount: data.unreadCount });
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread count from server:', error);
+    }
+  }, [user?._id]);
 
   useEffect(() => {
     if (!user) {
@@ -161,6 +189,7 @@ export const NotificationProvider = ({ children }) => {
         decrementUnread,
         clearUnread,
         clearAllUnread,
+        fetchUnreadFromServer,
         currentChatPartner,
         setCurrentChatPartner: setCurrentChatPartnerWithClear
       }}

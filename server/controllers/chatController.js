@@ -85,6 +85,30 @@ const sendMessage = async (req, res, next) => {
 
     await chat.populate('senderId', 'name matricNo');
 
+    const io = req.app.get('io');
+    if (io) {
+      const messageObj = {
+        ...chat.toObject(),
+        senderId: String(senderId),
+        recipientId: recipientId ? String(recipientId) : null,
+        chatId,
+        replyTo: replyTo || null,
+        replyToMessage: replyToMessage || null,
+        replyToSender: replyToSender || null
+      };
+      io.to(chatId).emit('receiveMessage', messageObj);
+
+      if (chatType === 'private' && recipientId) {
+        io.to(`user:${recipientId}`).emit('newMessageNotification', {
+          senderId: String(senderId),
+          senderName: req.user.name,
+          message: message.substring(0, 50),
+          chatId,
+          timestamp: new Date().toISOString()
+        });
+      }
+    }
+
     res.status(201).json({
       message: 'Message sent',
       chat

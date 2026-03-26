@@ -12,7 +12,7 @@ import { CornerUpLeft, X, UserPlus, Search, Trash2 } from 'lucide-react';
 const DirectChat = () => {
   const { user } = useAuth();
   const { isUserOnline } = useOnlineUsers();
-  const { getUnreadCount, clearUnread, setCurrentChatPartner: setPartnerWithClear } = useNotifications();
+  const { getUnreadCount, clearUnread, setCurrentChatPartner: setPartnerWithClear, fetchUnreadFromServer } = useNotifications();
   const { darkMode } = useContext(ThemeContext);
   const [activeConversations, setActiveConversations] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
@@ -113,7 +113,9 @@ const DirectChat = () => {
     setShowSidebar(false);
     setReplyingTo(null);
     if (user && selectedUserData) {
-      joinRoom(generateChatId(user._id, selectedUserData._id));
+      const chatId = generateChatId(user._id, selectedUserData._id);
+      joinRoom(chatId);
+      authAPI.clearUnread(chatId).catch(console.error);
     }
   }, [user, generateChatId, setPartnerWithClear]);
 
@@ -148,8 +150,9 @@ const DirectChat = () => {
   useEffect(() => {
     fetchActiveConversations();
     fetchAllUsers();
+    fetchUnreadFromServer();
     connectSocket();
-  }, [fetchActiveConversations, fetchAllUsers]);
+  }, [fetchActiveConversations, fetchAllUsers, fetchUnreadFromServer]);
 
   useEffect(() => {
     const handleReceiveMessage = (message) => {

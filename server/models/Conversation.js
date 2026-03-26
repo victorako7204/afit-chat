@@ -66,23 +66,41 @@ conversationSchema.statics.findOrCreateByParticipants = async function(userId1, 
 };
 
 conversationSchema.statics.incrementUnreadForUser = async function(chatId, targetUserId) {
-  await this.updateOne(
-    { _id: chatId },
+  const userIdStr = String(targetUserId);
+  
+  await this.findByIdAndUpdate(
+    chatId,
     { 
-      $inc: { [`unreadCount.${targetUserId}`]: 1 },
+      $inc: { [`unreadCount.${userIdStr}`]: 1 },
       $set: { lastMessageAt: new Date() }
-    }
+    },
+    { upsert: true, new: true }
   );
 };
 
 conversationSchema.statics.clearUnreadForUser = async function(chatId, targetUserId) {
-  const update = {};
-  update[`unreadCount.${targetUserId}`] = 0;
+  const userIdStr = String(targetUserId);
   
-  await this.updateOne(
-    { _id: chatId },
-    { $set: update }
+  await this.findByIdAndUpdate(
+    chatId,
+    { $set: { [`unreadCount.${userIdStr}`]: 0 } },
+    { upsert: true }
   );
+};
+
+conversationSchema.statics.getUnreadForUser = async function(userId) {
+  const userIdStr = String(userId);
+  const conversations = await this.find({
+    participants: userId
+  }).select('unreadCount');
+  
+  let total = 0;
+  conversations.forEach(conv => {
+    const count = conv.unreadCount?.get?.(userIdStr) || 0;
+    total += count;
+  });
+  
+  return total;
 };
 
 module.exports = mongoose.model('Conversation', conversationSchema);

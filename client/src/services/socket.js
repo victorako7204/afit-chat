@@ -6,8 +6,8 @@ let connected = false;
 let currentRoom = null;
 let currentUserId = null;
 
-// FIXED: Force production URL for ALL users (mobile + desktop)
-const SOCKET_URL = 'https://afit-chat-server.onrender.com';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 
+  (process.env.NODE_ENV === 'production' ? 'https://afit-chat-server.onrender.com' : 'http://localhost:5000');
 
 export const socket = {
   on: (event, callback) => {

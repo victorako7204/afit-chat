@@ -9,7 +9,7 @@ const GEMINI_API_KEYS = [
 
 console.log('🔑 Gemini API keys loaded:', GEMINI_API_KEYS.length);
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 const SYSTEM_INSTRUCTION = `You are an AFIT Academic Expert for the Nigerian Air Force Institute of Technology. Generate a 5-stage university module for the given topic.
 

@@ -26,6 +26,7 @@ const PublicChat = () => {
   const [error, setError] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [showPinned, setShowPinned] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const menuRef = useRef(null);

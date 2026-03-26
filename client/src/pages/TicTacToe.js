@@ -47,6 +47,7 @@ const TicTacToe = () => {
   const [winningPattern, setWinningPattern] = useState(null);
   const [resultReason, setResultReason] = useState(null);
   const [isHost, setIsHost] = useState(false);
+  const [currentTurn, setCurrentTurn] = useState('X');
   
   const [joinCode, setJoinCode] = useState('');
   const [showCopied, setShowCopied] = useState(false);

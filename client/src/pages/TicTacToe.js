@@ -47,7 +47,7 @@ const TicTacToe = () => {
   const [winningPattern, setWinningPattern] = useState(null);
   const [resultReason, setResultReason] = useState(null);
   const [isHost, setIsHost] = useState(false);
-  const [currentTurn, setCurrentTurn] = useState('X');
+  const [serverTurn, setServerTurn] = useState('X');
   
   const [joinCode, setJoinCode] = useState('');
   const [showCopied, setShowCopied] = useState(false);
@@ -121,7 +121,7 @@ const TicTacToe = () => {
       setWinner(null);
       setWinningPattern(null);
       setResultReason(null);
-      setCurrentTurn(data.currentTurn);
+      setServerTurn(data.currentTurn);
       
       const currentUser = userRef.current;
       const isX = String(data.whitePlayer?._id) === String(currentUser?._id);
@@ -157,7 +157,7 @@ const TicTacToe = () => {
         setPlayers({ X: data.whitePlayer, O: data.blackPlayer });
         setBoard(data.board || Array(9).fill(null));
         setGameStatus('active');
-        setCurrentTurn(data.currentTurn);
+        setServerTurn(data.currentTurn);
         
         const stored = getStoredRoom();
         if (stored?.playerSymbol) {
@@ -173,8 +173,8 @@ const TicTacToe = () => {
       console.log('⭕ TTT Board updated:', data);
       if (data.gameId !== gameIdRef.current) return;
       
-      setBoard([...data.board]);
-      setCurrentTurn(data.currentTurn);
+setBoard([...data.board]);
+      setServerTurn(data.currentTurn);
       setIsMyTurn(data.currentTurn === mySymbolRef.current);
       
       if (data.winningPattern) {
@@ -251,10 +251,6 @@ const TicTacToe = () => {
       socket.emit('rejoinRoom', { roomId: stored.roomId, userId: user?._id });
     }
   }, [gameStatus, user, getStoredRoom, mode]);
-
-  const setCurrentTurn = (turn) => {
-    setIsMyTurn(turn === mySymbolRef.current);
-  };
 
   const handleCreateRoom = () => {
     if (!user) return;

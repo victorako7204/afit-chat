@@ -207,7 +207,11 @@ const DirectChat = () => {
     };
 
     const handleChatHistory = (data) => {
-      if (selectedUser && user && data.chatId === generateChatId(user._id, selectedUser._id)) {
+      console.log('📥 chatHistory received:', { chatId: data.chatId, messagesCount: data.messages?.length });
+      const expectedChatId = generateChatId(user._id, selectedUser._id);
+      console.log('📥 Expected chatId:', expectedChatId, 'Got:', data.chatId);
+      
+      if (selectedUser && user && data.chatId === expectedChatId) {
         setMessages(data.messages || []);
         setLoading(false);
       }

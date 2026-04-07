@@ -120,11 +120,13 @@ const saveMessageToDatabase = async (messageData) => {
 
 const getChatHistory = async (chatId, limit = 50) => {
   try {
+    console.log(`📜 Fetching chat history for chatId: ${chatId}`);
     const messages = await Chat.find({ chatId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('senderId', 'name matricNo')
       .lean();
+    console.log(`📜 Found ${messages.length} messages for ${chatId}`);
     return messages.reverse();
   } catch (error) {
     console.error('❌ Error fetching chat history:', error.message);
@@ -214,7 +216,12 @@ io.on('connection', (socket) => {
 
   socket.on('joinChatRoom', async (data) => {
     const { chatId } = data;
-    if (!chatId) return;
+    console.log(`📥 joinChatRoom received: chatId=${chatId}, socketId=${socket.id}`);
+    
+    if (!chatId) {
+      console.warn('⚠️ No chatId provided');
+      return;
+    }
     
     socket.join(chatId);
     console.log(`📥 Socket ${socket.id} joined chat room: ${chatId}`);
@@ -235,6 +242,7 @@ io.on('connection', (socket) => {
     }
     
     const history = await getChatHistory(chatId);
+    console.log(`📤 Sending chatHistory with ${history.length} messages to socket ${socket.id}`);
     socket.emit('chatHistory', { chatId, messages: history });
     broadcastOnlineUsers();
   });

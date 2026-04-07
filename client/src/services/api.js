@@ -68,8 +68,8 @@ export const chatAPI = {
   clearChat: (chatId) => api.delete(`/chat/clear/${chatId}`),
   clearMessagesBefore: (chatId, timestamp) => 
     api.delete(`/chat/clear-before/${chatId}`, { data: { timestamp } }),
-  clearUnread: (chatId) => api.put(`/chat/unread/clear/${chatId}`),
-  getUnreadCount: () => api.get('/chat/unread/count')
+  clearUnread: (chatId) => api.put(`/chat/unread/clear/${chatId}`).catch(() => ({ message: 'ignored' })),
+  getUnreadCount: () => api.get('/chat/unread/count').then(r => r.data).catch(() => ({ unreadCount: 0 }))
 };
 
 export const lostAndFoundAPI = {

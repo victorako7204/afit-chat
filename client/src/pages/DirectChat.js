@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useOnlineUsers } from '../context/OnlineUsersContext';
 import { useNotifications } from '../context/NotificationContext';
 import { ThemeContext } from '../App';
-import { authAPI } from '../services/api';
+import { authAPI, chatAPI } from '../services/api';
 import { socket, connectSocket, joinRoom, sendMessageSocket } from '../services/socket';
 import { Button, Card, Input, Modal } from '../components/UI';
 import { CornerUpLeft, X, UserPlus, Search, Trash2 } from 'lucide-react';
@@ -121,7 +121,7 @@ const DirectChat = () => {
     if (user && selectedUserData) {
       const chatId = generateChatId(user._id, selectedUserData._id);
       joinRoom(chatId);
-      authAPI.clearUnread(chatId).catch(console.error);
+      chatAPI.clearUnread(chatId).catch(console.error);
     }
     
     return () => clearTimeout(timeout);
@@ -235,12 +235,20 @@ const DirectChat = () => {
       }
     };
 
+    const handleJoinChatRoomRequest = (data) => {
+      console.log('📥 Received joinChatRoomRequest:', data);
+      if (data?.chatId) {
+        socket.emit('joinChatRoom', { chatId: data.chatId });
+      }
+    };
+
     socket.on('receiveMessage', handleReceiveMessage);
     socket.on('chatHistory', handleChatHistory);
     socket.on('messageDeleted', handleMessageDeleted);
     socket.on('messageError', handleMessageError);
     socket.on('deleteError', handleDeleteError);
     socket.on('connect', handleSocketConnect);
+    socket.on('joinChatRoomRequest', handleJoinChatRoomRequest);
 
     return () => {
       socket.off('receiveMessage', handleReceiveMessage);
@@ -249,6 +257,7 @@ const DirectChat = () => {
       socket.off('messageError', handleMessageError);
       socket.off('deleteError', handleDeleteError);
       socket.off('connect', handleSocketConnect);
+      socket.off('joinChatRoomRequest', handleJoinChatRoomRequest);
     };
   }, [selectedUser, user, generateChatId, updateConversationInList]);
 

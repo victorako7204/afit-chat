@@ -215,7 +215,25 @@ io.on('connection', (socket) => {
   socket.on('joinChatRoom', async (data) => {
     const { chatId } = data;
     if (!chatId) return;
+    
     socket.join(chatId);
+    console.log(`📥 Socket ${socket.id} joined chat room: ${chatId}`);
+    
+    // For direct messages (dm-user1-user2 format), notify recipient to join
+    if (chatId.startsWith('dm-')) {
+      const parts = chatId.split('-');
+      if (parts.length >= 3) {
+        // parts: ['dm', 'userId1', 'userId2']
+        const userIds = parts.slice(1);
+        userIds.forEach(userId => {
+          if (userId !== socket.userId) {
+            io.to(`user:${userId}`).emit('joinChatRoomRequest', { chatId });
+            console.log(`📤 Sent joinChatRoomRequest to user: ${userId}`);
+          }
+        });
+      }
+    }
+    
     const history = await getChatHistory(chatId);
     socket.emit('chatHistory', { chatId, messages: history });
     broadcastOnlineUsers();
@@ -891,6 +909,7 @@ io.on('connection', (socket) => {
         replyToMessage: replyToMessage || null,
         replyToSender: replyToSender || null
       };
+      
       io.to(chatId).emit('receiveMessage', messageObj);
 
       if (chatType === 'private' && recipientId) {
@@ -899,6 +918,8 @@ io.on('connection', (socket) => {
         
         Conversation.incrementUnreadForUser(chatId, recipientIdStr).catch(console.error);
 
+        io.to(`user:${recipientIdStr}`).emit('receiveMessage', messageObj);
+        
         io.to(`user:${recipientIdStr}`).emit('newMessageNotification', {
           senderId: String(senderId),
           senderName,

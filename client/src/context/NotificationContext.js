@@ -26,16 +26,21 @@ const saveToStorage = (data) => {
 
 const fetchFromAPI = async (url, options = {}) => {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${process.env.REACT_APP_API_URL}${url}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '',
-      ...options.headers
-    }
-  });
-  if (!response.ok) throw new Error('API request failed');
-  return response.json();
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}${url}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.headers
+      }
+    });
+    if (!response.ok) return { unreadCount: 0 };
+    return response.json();
+  } catch (e) {
+    console.warn('fetchFromAPI error:', e.message);
+    return { unreadCount: 0 };
+  }
 };
 
 export const NotificationProvider = ({ children }) => {

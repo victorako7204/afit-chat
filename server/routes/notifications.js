@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const PushSubscription = require('../models/PushSubscription');
 const webpush = require('web-push');
 const {

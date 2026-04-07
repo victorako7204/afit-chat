@@ -11,6 +11,7 @@ const AdminDashboard = () => {
   const { darkMode } = useContext(ThemeContext);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterRole, setFilterRole] = useState('all');
@@ -26,6 +27,7 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/admin/users`, {
         params: { limit: 100 }
@@ -34,6 +36,9 @@ const AdminDashboard = () => {
       calculateStats(res.data.users || []);
     } catch (err) {
       console.error('Failed to fetch users:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Failed to fetch users';
+      setError(errorMsg);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -260,6 +265,17 @@ const AdminDashboard = () => {
             </select>
           </div>
         </div>
+
+        {error && (
+          <div className={`p-4 rounded-lg mb-4 flex items-center gap-2 ${
+            darkMode 
+              ? 'bg-red-500/20 border border-red-500/50 text-red-400' 
+              : 'bg-red-100 border border-red-300 text-red-700'
+          }`}>
+            <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+            {error}
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-8">

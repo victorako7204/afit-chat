@@ -62,6 +62,8 @@ export const authAPI = {
 export const chatAPI = {
   getMessages: (chatId, limit = 20, skip = 0) => 
     api.get(`/chat/${chatId}?limit=${limit}&skip=${skip}`),
+  getPrivateMessages: (targetUserId, limit = 50) =>
+    api.get(`/chat/private/${targetUserId}?limit=${limit}`),
   sendMessage: (data) => api.post('/chat', data),
   sendAnonymousMessage: (data) => api.post('/chat/anonymous', data),
   deleteMessage: (id) => api.delete(`/chat/message/${id}`),

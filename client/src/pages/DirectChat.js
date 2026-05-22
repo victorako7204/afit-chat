@@ -105,7 +105,7 @@ const DirectChat = () => {
     });
   }, []);
 
-  const handleSelectUser = useCallback((selectedUserData) => {
+  const handleSelectUser = useCallback(async (selectedUserData) => {
     setSelectedUser(selectedUserData);
     setPartnerWithClear(selectedUserData);
     setMessages([]);
@@ -113,18 +113,20 @@ const DirectChat = () => {
     setShowSidebar(false);
     setReplyingTo(null);
     
-    const timeout = setTimeout(() => {
-      console.warn('Chat history load timeout - messages may not load');
-      setLoading(false);
-    }, 5000);
-    
     if (user && selectedUserData) {
       const chatId = generateChatId(user._id, selectedUserData._id);
       joinRoom(chatId);
-      chatAPI.clearUnread(chatId).catch(console.error);
+      chatAPI.clearUnread(chatId).catch(() => {});
+      
+      chatAPI.getPrivateMessages(selectedUserData._id).then(res => {
+        if (res.data?.messages?.length > 0) {
+          setMessages(res.data.messages);
+          setLoading(false);
+        }
+      }).catch(() => {});
     }
     
-    return () => clearTimeout(timeout);
+    setTimeout(() => setLoading(false), 5000);
   }, [user, generateChatId, setPartnerWithClear]);
 
   const handleStartConversation = (userData) => {

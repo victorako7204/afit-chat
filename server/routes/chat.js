@@ -11,11 +11,35 @@ const {
   clearMessagesBefore
 } = require('../controllers/chatController');
 const Conversation = require('../models/Conversation');
+const Chat = require('../models/Chat');
+
+const getPrivateRoomId = (userId1, userId2) => {
+  return `dm-${[String(userId1), String(userId2)].sort().join('-')}`;
+};
 
 // Public routes for authenticated users (with suspension check)
 router.get('/:chatId', auth, checkNotSuspended, getMessages);
 router.post('/', auth, checkNotSuspended, sendMessage);
 router.post('/anonymous', sendAnonymousMessage);
+
+// Private message history with server-side room ID calculation
+router.get('/private/:targetUserId', auth, checkNotSuspended, async (req, res, next) => {
+  try {
+    const { targetUserId } = req.params;
+    const chatId = getPrivateRoomId(req.user._id, targetUserId);
+    const limit = parseInt(req.query.limit) || 50;
+    
+    const messages = await Chat.find({ chatId })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('senderId', 'name matricNo')
+      .lean();
+    
+    res.json({ messages: messages.reverse(), chatId });
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Unread count routes
 router.get('/unread/count', auth, async (req, res, next) => {

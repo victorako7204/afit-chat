@@ -23,6 +23,10 @@ const Game = require('./models/Game');
 const User = require('./models/User');
 const Conversation = require('./models/Conversation');
 
+const getPrivateRoomId = (userId1, userId2) => {
+  return `dm-${[String(userId1), String(userId2)].sort().join('-')}`;
+};
+
 let sendPushNotification;
 try {
   const notificationsModule = require('./routes/notifications');

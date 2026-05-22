@@ -217,9 +217,10 @@ const DirectChat = () => {
       }
     };
 
-    const handleMessageDeleted = ({ messageId }) => {
+    const handleMessageDeleted = ({ messageId, _id }) => {
+      const id = _id || messageId;
       setMessages(prev => prev.map(m => 
-        m._id === messageId ? { ...m, deleted: true, message: '' } : m
+        m._id === id ? { ...m, deleted: true, message: '' } : m
       ));
     };
 

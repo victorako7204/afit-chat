@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * AFIT Packet Router - Network Sorting Engine
  * Implements packet routing and IP filtering

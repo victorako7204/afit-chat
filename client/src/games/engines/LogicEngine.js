@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * AFIT Logic Gate Overload - Boolean Algebra Engine
  * Implements logic gates and circuit evaluation

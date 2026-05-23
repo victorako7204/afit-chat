@@ -7,6 +7,7 @@ const quizSchema = new mongoose.Schema({
 }, { _id: false });
 
 const stageSchema = new mongoose.Schema({
+  moduleId: { type: Number },
   heading: { type: String, required: true },
   content: { type: String, required: true },
   quiz: [quizSchema]
@@ -33,9 +34,9 @@ const moduleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  creatorName: {
+    creatorName: {
     type: String,
-    default: 'AI-Gemini'
+    default: 'AI-Qwen'
   },
   isPublic: {
     type: Boolean,
@@ -68,7 +69,7 @@ moduleSchema.index({ title: 'text', description: 'text', tags: 'text' });
 
 moduleSchema.pre('save', function(next) {
   if (this.isNew && !this.creator) {
-    this.creatorName = 'AI-Gemini';
+    this.creatorName = 'AI-Qwen';
   }
   next();
 });

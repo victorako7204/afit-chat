@@ -323,7 +323,7 @@ const EducationHub = () => {
               if (!stage) return null;
               return (
                 <button
-                  key={index}
+                  key={stage.moduleId ?? index}
                   onClick={() => setCurrentStageIndex(index)}
                   className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
                     currentStageIndex === index

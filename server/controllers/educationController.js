@@ -1,80 +1,11 @@
 const Module = require('../models/Module');
-const GEMINI_API_KEYS = [
-  process.env.GEMINI_KEY_1,
-  process.env.GEMINI_KEY_2,
-  process.env.GEMINI_KEY_3,
-  process.env.GEMINI_KEY_4,
-  process.env.GEMINI_KEY_5
-].filter(Boolean);
 
-console.log('🔑 Gemini API keys loaded:', GEMINI_API_KEYS.length);
+const OpenAI = require('openai');
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-
-const SYSTEM_INSTRUCTION = `You are an AFIT Academic Expert for the Nigerian Air Force Institute of Technology. Generate a 5-stage university module for the given topic.
-
-Use LaTeX for math (e.g., $E = mc^2$, $\\frac{dy}{dx}$). Output ONLY raw JSON in this format:
-{"title":"","subject":"","description":"","tags":[""],"stages":[{"heading":"","content":"","quiz":[{"question":"","options":["","","",""],"answer":""}]}]}`;
-
-const callGeminiAPI = async (topic, keyIndex = 0) => {
-  const apiKey = GEMINI_API_KEYS[keyIndex];
-  
-  if (!apiKey) {
-    throw new Error('Gemini API key not configured at index ' + keyIndex);
-  }
-  
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: `${SYSTEM_INSTRUCTION}\n\nGenerate a comprehensive module for: ${topic}` }]
-      }],
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 8192,
-        topP: 0.9,
-        topK: 40
-      }
-    })
-  });
-
-  if (response.status === 429 && keyIndex < GEMINI_API_KEYS.length - 1) {
-    console.log(`Rate limited with key ${keyIndex}, switching to key ${keyIndex + 1}`);
-    return callGeminiAPI(topic, keyIndex + 1);
-  }
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  return data;
-};
-
-const sanitizeGeminiResponse = (text) => {
-  if (!text) return null;
-  
-  let cleaned = text.replace(/```json\n?|```\n?/gi, '');
-  cleaned = cleaned.replace(/```/g, '');
-  cleaned = cleaned.trim();
-  
-  try {
-    return JSON.parse(cleaned);
-  } catch (e) {
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        return JSON.parse(jsonMatch[0]);
-      } catch (err) {
-        console.error('Failed to parse Gemini response:', err);
-        return null;
-      }
-    }
-    return null;
-  }
-};
+const qwenClient = new OpenAI({
+  baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+  apiKey: process.env.DASHSCOPE_API_KEY
+});
 
 const generateModule = async (req, res, next) => {
   try {
@@ -84,17 +15,16 @@ const generateModule = async (req, res, next) => {
       return res.status(400).json({ message: 'Topic must be at least 3 characters' });
     }
 
-    // Check if API keys are configured
-    if (GEMINI_API_KEYS.length === 0) {
-      console.error('❌ No Gemini API keys configured');
-      return res.status(503).json({ 
-        message: 'AI service is currently unavailable. No API keys configured. Please contact the administrator.'
+    if (!process.env.DASHSCOPE_API_KEY) {
+      console.error('❌ No DASHSCOPE_API_KEY configured');
+      return res.status(503).json({
+        message: 'AI service is currently unavailable. No API key configured. Please contact the administrator.'
       });
     }
 
     const normalizedTopic = topic.trim().toLowerCase();
 
-    const existingModules = await Module.find({
+    let existingModule = await Module.findOne({
       isPublic: true,
       $or: [
         { title: { $regex: `^${normalizedTopic}$`, $options: 'i' } },
@@ -102,49 +32,82 @@ const generateModule = async (req, res, next) => {
       ]
     }).limit(1);
 
-    if (existingModules.length > 0) {
-      const cached = existingModules[0];
-      cached.views = (cached.views || 0) + 1;
-      await cached.save();
-      
+    if (existingModule) {
+      existingModule.views = (existingModule.views || 0) + 1;
+      await existingModule.save();
+
       return res.json({
         message: 'Module found in cache',
-        module: cached,
+        module: existingModule,
         cached: true
       });
     }
 
-    let moduleData;
+    let generatedCourse;
     let attempts = 0;
-    const maxAttempts = GEMINI_API_KEYS.length;
+    const maxAttempts = 3;
     let lastError = null;
 
     while (attempts < maxAttempts) {
       try {
-        console.log(`🔄 Attempt ${attempts + 1}/${maxAttempts} with API key ${attempts}`);
-        const data = await callGeminiAPI(topic.trim(), attempts);
-        
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          const rawText = data.candidates[0].content.parts[0].text;
-          moduleData = sanitizeGeminiResponse(rawText);
-          
-          if (moduleData && moduleData.title && moduleData.stages) {
-            console.log('✅ Module generated successfully');
-            break;
-          } else {
-            console.log('⚠️ Invalid module structure, retrying...');
+        console.log(`🔄 Qwen generation attempt ${attempts + 1}/${maxAttempts}`);
+
+        const completion = await qwenClient.chat.completions.create({
+          model: "qwen3.5-flash",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content: "You are the AFIT Academic Engine. You must return a strict JSON object matching the exact requested structural schema. Do not include markdown code block formatting or introductory text."
+            },
+            {
+              role: "user",
+              content: `Generate a simplified learning module for the topic: "${topic}". Structure it explicitly as a JSON object with this shape:
+      {
+        "courseTitle": "String",
+        "subject": "Math|Physics|GST|COS|Chemistry|Biology|Engineering|Computer Science|Other",
+        "description": "String",
+        "tags": ["tag1", "tag2"],
+        "modules": [
+          {
+            "moduleId": 1,
+            "moduleTitle": "String",
+            "content": "Step-by-step simplified explanations using LaTeX where appropriate (e.g. $E = mc^2$, $\\\\frac{dy}{dx}$)...",
+            "quiz": [
+              {
+                "question": "String",
+                "options": ["A", "B", "C", "D"],
+                "correctAnswer": "String"
+              }
+            ]
           }
+        ]
+      }`
+            }
+          ]
+        });
+
+        const rawText = completion.choices[0].message.content;
+        console.log("📥 Raw Qwen response length:", rawText?.length);
+
+        generatedCourse = JSON.parse(rawText);
+
+        if (generatedCourse && generatedCourse.courseTitle && Array.isArray(generatedCourse.modules) && generatedCourse.modules.length > 0) {
+          console.log('✅ Course generated successfully');
+          break;
+        } else {
+          console.log('⚠️ Invalid course structure, retrying...');
         }
-        
+
         attempts++;
       } catch (apiError) {
         attempts++;
         lastError = apiError.message;
-        console.error(`❌ API call attempt ${attempts} failed:`, apiError.message);
-        
+        console.error(`❌ Qwen API call attempt ${attempts} failed:`, apiError.message);
+
         if (attempts >= maxAttempts) {
-          console.log('❌ All API keys failed. Searching for similar modules...');
-          
+          console.log('❌ All Qwen attempts failed. Searching for similar modules...');
+
           const similarModules = await Module.find({
             isPublic: true,
             $or: [
@@ -158,7 +121,7 @@ const generateModule = async (req, res, next) => {
             const fallbackModule = similarModules[0];
             fallbackModule.views = (fallbackModule.views || 0) + 1;
             await fallbackModule.save();
-            
+
             return res.json({
               message: 'AI service had issues. Here is a similar module:',
               module: fallbackModule,
@@ -166,36 +129,38 @@ const generateModule = async (req, res, next) => {
               fallback: true
             });
           }
-          
-          return res.status(503).json({ 
-            message: 'AI service is temporarily unavailable. Please try again later or create a module manually.'
+
+          return res.status(503).json({
+            message: 'AI service is temporarily unavailable. Please try again later or create a module manually.',
+            error: lastError
           });
         }
       }
     }
 
-    if (!moduleData || !moduleData.stages) {
-      return res.status(500).json({ 
-        message: 'Failed to generate module content. Please try a different topic.' 
+    if (!generatedCourse || !generatedCourse.courseTitle || !Array.isArray(generatedCourse.modules)) {
+      return res.status(500).json({
+        message: 'Failed to generate module content. Please try a different topic.'
       });
     }
 
     const module = new Module({
-      title: moduleData.title || topic.trim(),
-      subject: moduleData.subject || 'Other',
-      description: moduleData.description || `AI-generated module on ${topic}`,
-      tags: moduleData.tags || [topic.trim().toLowerCase()],
-      stages: moduleData.stages.map(stage => ({
-        heading: stage.heading || 'Untitled Stage',
-        content: stage.content || '',
-        quiz: (stage.quiz || []).map(q => ({
+      title: generatedCourse.courseTitle || topic.trim(),
+      subject: generatedCourse.subject || 'Other',
+      description: generatedCourse.description || `AI-generated module on ${topic}`,
+      tags: generatedCourse.tags || [topic.trim().toLowerCase()],
+      stages: generatedCourse.modules.map(mod => ({
+        moduleId: mod.moduleId || undefined,
+        heading: mod.moduleTitle || 'Untitled Stage',
+        content: mod.content || '',
+        quiz: (mod.quiz || []).map(q => ({
           question: q.question || '',
           options: Array.isArray(q.options) ? q.options : [],
-          answer: q.answer || q.options?.[0] || ''
+          answer: q.correctAnswer || q.options?.[0] || ''
         }))
       })),
       creator: req.user?._id,
-      creatorName: 'AI-Gemini',
+      creatorName: 'AI-Qwen',
       isPublic: true,
       isVerified: false,
       views: 0
@@ -219,7 +184,7 @@ const generateModule = async (req, res, next) => {
 const getPublicModules = async (req, res, next) => {
   try {
     const { subject, search, page = 1, limit = 20 } = req.query;
-    
+
     const result = await Module.getPublicModules({
       subject,
       search,
@@ -255,7 +220,7 @@ const getModule = async (req, res, next) => {
 const getModuleByTitle = async (req, res, next) => {
   try {
     const { title } = req.params;
-    
+
     const modules = await Module.searchByTitle(decodeURIComponent(title));
 
     if (modules.length === 0) {
@@ -278,8 +243,8 @@ const createManualModule = async (req, res, next) => {
     const { title, subject, description, tags, stages } = req.body;
 
     if (!title || !subject || !stages || !Array.isArray(stages) || stages.length === 0) {
-      return res.status(400).json({ 
-        message: 'Title, subject, and at least one stage are required' 
+      return res.status(400).json({
+        message: 'Title, subject, and at least one stage are required'
       });
     }
 

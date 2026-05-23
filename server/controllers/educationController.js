@@ -23,11 +23,12 @@ const generateModule = async (req, res, next) => {
     }
 
     const normalizedTopic = topic.trim().toLowerCase();
+    const escapedTopic = normalizedTopic.replace(/[-\/\\^$*+%.()|[\]{}]/g, '\\$&');
 
     let existingModule = await Module.findOne({
       isPublic: true,
       $or: [
-        { title: { $regex: `^${normalizedTopic}$`, $options: 'i' } },
+        { title: { $regex: `^${escapedTopic}$`, $options: 'i' } },
         { tags: { $in: [normalizedTopic] } }
       ]
     }).limit(1);
@@ -111,7 +112,7 @@ const generateModule = async (req, res, next) => {
           const similarModules = await Module.find({
             isPublic: true,
             $or: [
-              { title: { $regex: normalizedTopic.split(' ')[0], $options: 'i' } },
+              { title: { $regex: escapedTopic.split(' ')[0], $options: 'i' } },
               { tags: { $in: normalizedTopic.split(' ') } },
               { subject: { $in: ['Math', 'Physics', 'Engineering', 'Computer Science'] } }
             ]

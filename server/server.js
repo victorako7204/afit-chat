@@ -685,8 +685,8 @@ io.on('connection', (socket) => {
         if (roomCode) delete gameRooms[roomCode];
       }
     } catch (error) {
-      console.error(`❌ Move error for game ${gameId}:`, error.message || error);
-      socket.emit('moveError', { message: 'Server error: ' + (error.message || 'Unknown error') });
+      console.error('❌ Move execution error:', error.message);
+      socket.emit('moveError', { message: 'Failed to process move' });
     }
   });
 
@@ -1003,12 +1003,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const startServer = async () => {
-  console.log('🚀 Starting server...');
-  await connectDB();
-  server.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-  });
-};
-
-startServer();
+server.listen(PORT, () => {
+  console.log(`🚀 AFIT Server running on port ${PORT}`);
+  connectDB();
+});

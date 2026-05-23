@@ -8,7 +8,7 @@ const Groups = () => {
   const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [myGroups, setMyGroups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '', department: '' });
   const [error, setError] = useState('');
@@ -20,16 +20,29 @@ const Groups = () => {
 
   const fetchGroups = async () => {
     try {
+      setIsLoading(true);
+      setError('');
+
       const [allGroups, myGroupsRes] = await Promise.all([
         groupAPI.getGroups(),
         groupAPI.getMyGroups()
       ]);
-      setGroups(allGroups.data);
-      setMyGroups(myGroupsRes.data);
+
+      console.log("Group Server Response Payload:", allGroups?.data);
+      console.log("My Groups Server Response Payload:", myGroupsRes?.data);
+
+      const allGroupsData = Array.isArray(allGroups?.data) ? allGroups.data : (allGroups?.data?.groups || []);
+      const myGroupsData = Array.isArray(myGroupsRes?.data) ? myGroupsRes.data : (myGroupsRes?.data?.groups || []);
+
+      setGroups(allGroupsData);
+      setMyGroups(myGroupsData);
     } catch (err) {
-      // Silently handle error
+      console.error("Group Fetch Error:", err);
+      setError(err.message || "Failed to load groups");
+      setGroups([]);
+      setMyGroups([]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -74,6 +87,32 @@ const Groups = () => {
   const isMember = (group) => {
     return group.members.some(m => m._id === user._id);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mx-auto mb-4" />
+          <p className="text-gray-500">Loading AFIT Spaces...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && groups.length === 0 && myGroups.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto animate-fade-in">
+        <Card className="text-center py-12">
+          <svg className="w-12 h-12 mx-auto text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <p className="mt-4 text-red-500 font-medium">Unable to load groups</p>
+          <p className="text-sm text-gray-500 mt-1">{error}</p>
+          <Button className="mt-4" onClick={fetchGroups}>Try Again</Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in">
@@ -128,16 +167,15 @@ const Groups = () => {
 
       <h2 className="text-lg font-semibold text-gray-900 mb-4">All Groups</h2>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent" />
-        </div>
-      ) : groups.length === 0 ? (
+      {groups.length === 0 ? (
         <Card className="text-center py-12">
           <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <p className="mt-4 text-gray-500">No groups available yet</p>
+          <p className="mt-4 text-gray-500">You aren't a member of any groups yet.</p>
+          {myGroups.length === 0 && (
+            <Button className="mt-4" onClick={() => setShowModal(true)}>Create Your First Group</Button>
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

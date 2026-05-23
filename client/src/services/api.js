@@ -93,6 +93,7 @@ export const libraryAPI = {
 
 export const groupAPI = {
   getGroups: () => api.get('/groups'),
+  getGroup: (id) => api.get(`/groups/${id}`),
   getMyGroups: () => api.get('/groups/my'),
   createGroup: (data) => api.post('/groups', data),
   joinGroup: (id) => api.put(`/groups/${id}/join`),

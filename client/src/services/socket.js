@@ -89,6 +89,11 @@ export const connectSocket = (userId = null) => {
       if (currentUserId) {
         socketInstance.emit('userConnected', { userId: currentUserId });
       }
+      
+      if (currentRoom) {
+        console.log(`🔁 Rejoining room after reconnect: ${currentRoom}`);
+        socketInstance.emit('joinChatRoom', { chatId: currentRoom });
+      }
     });
     
     console.log('🔌 Attempting to connect...');

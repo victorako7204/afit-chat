@@ -36,19 +36,14 @@ const GroupChat = () => {
 
   const fetchGroup = useCallback(async () => {
     try {
-      const res = await groupAPI.getGroups();
-      const found = res.data.find(g => g._id === groupId);
-      if (found) {
-        setGroup(found);
-      } else {
-        navigate('/groups');
-      }
+      const res = await groupAPI.getGroup(groupId);
+      setGroup(res.data);
     } catch (err) {
-      navigate('/groups');
+      console.error('fetchGroup error:', err?.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
-  }, [groupId, navigate]);
+  }, [groupId]);
 
   const fetchMessages = useCallback(async (loadMore = false) => {
     if (loadMore) {

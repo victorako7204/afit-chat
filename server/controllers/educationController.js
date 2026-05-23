@@ -3,8 +3,12 @@ const Module = require('../models/Module');
 const OpenAI = require('openai');
 
 const qwenClient = new OpenAI({
-  baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-  apiKey: process.env.DASHSCOPE_API_KEY
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.DASHSCOPE_API_KEY,
+  defaultHeaders: {
+    "HTTP-Referer": "https://afit-chat.vercel.app",
+    "X-Title": "AFIT Educational Hub"
+  }
 });
 
 const generateModule = async (req, res, next) => {
@@ -54,7 +58,7 @@ const generateModule = async (req, res, next) => {
         console.log(`🔄 Qwen generation attempt ${attempts + 1}/${maxAttempts}`);
 
         const completion = await qwenClient.chat.completions.create({
-          model: "qwen3.5-flash",
+          model: "qwen/qwen-3.5-flash",
           response_format: { type: "json_object" },
           messages: [
             {

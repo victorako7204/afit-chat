@@ -58,7 +58,7 @@ const generateModule = async (req, res, next) => {
         console.log(`🔄 Qwen generation attempt ${attempts + 1}/${maxAttempts}`);
 
         const completion = await qwenClient.chat.completions.create({
-          model: "qwen/qwen-3.5-flash",
+          model: "qwen/qwen3.5-flash-02-23",
           response_format: { type: "json_object" },
           messages: [
             {

@@ -1,15 +1,5 @@
 const Module = require('../models/Module');
-
-const OpenAI = require('openai');
-
-const qwenClient = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.DASHSCOPE_API_KEY,
-  defaultHeaders: {
-    "HTTP-Referer": "https://afit-chat.vercel.app",
-    "X-Title": "AFIT Educational Hub"
-  }
-});
+const { generateEducationalContent } = require('../services/aiContentService');
 
 const generateModule = async (req, res, next) => {
   try {
@@ -19,8 +9,8 @@ const generateModule = async (req, res, next) => {
       return res.status(400).json({ message: 'Topic must be at least 3 characters' });
     }
 
-    if (!process.env.DASHSCOPE_API_KEY) {
-      console.error('❌ No DASHSCOPE_API_KEY configured');
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.error('❌ No OPENROUTER_API_KEY configured');
       return res.status(503).json({
         message: 'AI service is currently unavailable. No API key configured. Please contact the administrator.'
       });
@@ -57,17 +47,14 @@ const generateModule = async (req, res, next) => {
       try {
         console.log(`🔄 Qwen generation attempt ${attempts + 1}/${maxAttempts}`);
 
-        const completion = await qwenClient.chat.completions.create({
-          model: "qwen/qwen3.5-flash-02-23",
-          response_format: { type: "json_object" },
-          messages: [
-            {
-              role: "system",
-              content: "You are the AFIT Academic Engine. You must return a strict JSON object matching the exact requested structural schema. Do not include markdown code block formatting or introductory text."
-            },
-            {
-              role: "user",
-              content: `Generate a simplified learning module for the topic: "${topic}". Structure it explicitly as a JSON object with this shape:
+        const rawText = await generateEducationalContent([
+          {
+            role: "system",
+            content: "You are the AFIT Academic Engine. You must return a strict JSON object matching the exact requested structural schema. Do not include markdown code block formatting or introductory text."
+          },
+          {
+            role: "user",
+            content: `Generate a simplified learning module for the topic: "${topic}". Structure it explicitly as a JSON object with this shape:
       {
         "courseTitle": "String",
         "subject": "Math|Physics|GST|COS|Chemistry|Biology|Engineering|Computer Science|Other",
@@ -88,11 +75,8 @@ const generateModule = async (req, res, next) => {
           }
         ]
       }`
-            }
-          ]
-        });
-
-        const rawText = completion.choices[0].message.content;
+          }
+        ]);
         console.log("📥 Raw Qwen response length:", rawText?.length);
 
         generatedCourse = JSON.parse(rawText);

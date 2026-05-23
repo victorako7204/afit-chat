@@ -68,6 +68,7 @@ app.use('/api/lost-and-found', lostAndFoundRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/education', educationRoutes);
+app.use('/api/lessons', require('./routes/lessonRoute'));
 app.use('/api/games', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/notifications', notificationsRoutes);

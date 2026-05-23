@@ -685,8 +685,7 @@ io.on('connection', (socket) => {
         if (roomCode) delete gameRooms[roomCode];
       }
     } catch (error) {
-      console.error('❌ Move execution error:', error.message);
-      socket.emit('moveError', { message: 'Failed to process move' });
+      console.error('Processing error:', error.message);
     }
   });
 
@@ -1003,7 +1002,8 @@ io.on('connection', (socket) => {
   });
 });
 
+// Initialize server and database connection
 server.listen(PORT, () => {
-  console.log(`🚀 AFIT Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   connectDB();
 });

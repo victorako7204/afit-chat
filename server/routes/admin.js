@@ -99,7 +99,7 @@ router.get('/users', auth, checkAdmin, async (req, res) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const users = await User.find(filter)
-      .select('-password')
+      .select('+matricNo -password')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -123,7 +123,7 @@ router.get('/users', auth, checkAdmin, async (req, res) => {
 
 router.get('/user/:userId', auth, checkAdmin, async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select('-password');
+    const user = await User.findById(req.params.userId).select('+matricNo -password');
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });

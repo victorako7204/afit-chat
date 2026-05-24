@@ -18,7 +18,7 @@ const getMessages = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('senderId', isAdmin ? 'name matricNo email department role status' : 'name matricNo')
+      .populate('senderId', isAdmin ? '+matricNo name email department role status' : 'name')
       .lean();
 
     const processedMessages = messages.map(msg => {
@@ -34,7 +34,7 @@ const getMessages = async (req, res, next) => {
           senderName: 'Anonymous Student', 
           senderId: null,
           senderIdObj: null,
-          matricNo: 'hidden',
+          matricNo: undefined,
           isAnonymous: true 
         };
       }
@@ -83,7 +83,7 @@ const sendMessage = async (req, res, next) => {
 
     await chat.save();
 
-    await chat.populate('senderId', 'name matricNo');
+    await chat.populate('senderId', 'name');
 
     const io = req.app.get('io');
     if (io) {

@@ -76,8 +76,8 @@ const createGame = async (req, res, next) => {
       waitingGame.status = 'active';
       waitingGame.startedAt = new Date();
 
-      await waitingGame.populate('whitePlayer', 'name matricNo');
-      await waitingGame.populate('blackPlayer', 'name matricNo');
+      await waitingGame.populate('whitePlayer', 'name');
+      await waitingGame.populate('blackPlayer', 'name');
       await waitingGame.save();
 
       const io = req.app.get('io');
@@ -99,7 +99,7 @@ const createGame = async (req, res, next) => {
       whitePlayer: userId,
       status: 'waiting'
     });
-    await game.populate('whitePlayer', 'name matricNo');
+    await game.populate('whitePlayer', 'name');
     await game.save();
 
     res.status(201).json({
@@ -119,9 +119,9 @@ const getGame = async (req, res, next) => {
     const userId = req.user._id;
 
     const game = await Game.findById(gameId)
-      .populate('whitePlayer', 'name matricNo points')
-      .populate('blackPlayer', 'name matricNo points')
-      .populate('winner', 'name matricNo');
+      .populate('whitePlayer', 'name points')
+      .populate('blackPlayer', 'name points')
+      .populate('winner', 'name');
 
     if (!game) {
       return res.status(404).json({ message: 'Game not found' });
@@ -181,9 +181,9 @@ const makeMove = async (req, res, next) => {
     }
 
     await game.save();
-    await game.populate('whitePlayer', 'name matricNo');
-    await game.populate('blackPlayer', 'name matricNo');
-    await game.populate('winner', 'name matricNo');
+    await game.populate('whitePlayer', 'name');
+    await game.populate('blackPlayer', 'name');
+    await game.populate('winner', 'name');
 
     const io = req.app.get('io');
     if (io) {
@@ -262,9 +262,9 @@ const endGame = async (req, res, next) => {
     }
 
     await game.save();
-    await game.populate('whitePlayer', 'name matricNo points');
-    await game.populate('blackPlayer', 'name matricNo points');
-    await game.populate('winner', 'name matricNo');
+    await game.populate('whitePlayer', 'name points');
+    await game.populate('blackPlayer', 'name points');
+    await game.populate('winner', 'name');
 
     const io = req.app.get('io');
     if (io) {
@@ -328,9 +328,9 @@ const getMyGames = async (req, res, next) => {
     }
 
     const games = await Game.find(query)
-      .populate('whitePlayer', 'name matricNo')
-      .populate('blackPlayer', 'name matricNo')
-      .populate('winner', 'name matricNo')
+      .populate('whitePlayer', 'name')
+      .populate('blackPlayer', 'name')
+      .populate('winner', 'name')
       .sort({ createdAt: -1 })
       .limit(parseInt(limit));
 
@@ -343,7 +343,7 @@ const getMyGames = async (req, res, next) => {
 const getWaitingGames = async (req, res, next) => {
   try {
     const waitingGames = await Game.find({ status: 'waiting' })
-      .populate('whitePlayer', 'name matricNo points totalWins')
+      .populate('whitePlayer', 'name points totalWins')
       .sort({ createdAt: 1 })
       .limit(20);
 

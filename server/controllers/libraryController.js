@@ -36,7 +36,7 @@ const getResources = async (req, res, next) => {
     const query = department ? { department } : {};
 
     const resources = await Library.find(query)
-      .populate('uploadedBy', 'name matricNo')
+      .populate('uploadedBy', 'name')
       .sort({ createdAt: -1 });
 
     res.json(resources);
@@ -48,7 +48,7 @@ const getResources = async (req, res, next) => {
 const getResource = async (req, res, next) => {
   try {
     const resource = await Library.findById(req.params.id)
-      .populate('uploadedBy', 'name matricNo');
+      .populate('uploadedBy', 'name');
 
     if (!resource) {
       return res.status(404).json({ message: 'Resource not found' });

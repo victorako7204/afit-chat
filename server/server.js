@@ -116,7 +116,7 @@ const saveMessageToDatabase = async (messageData) => {
     });
     
     const savedChat = await chat.save();
-    return await savedChat.populate('senderId', 'name matricNo');
+    return await savedChat.populate('senderId', 'name');
   } catch (error) {
     console.error('❌ Database Save Crash:', error.message);
     throw error;
@@ -129,7 +129,7 @@ const getChatHistory = async (chatId, limit = 50) => {
     const messages = await Chat.find({ chatId })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('senderId', 'name matricNo')
+      .populate('senderId', 'name')
       .lean();
     console.log(`📜 Found ${messages.length} messages for ${chatId}`);
     return messages.reverse();
@@ -150,7 +150,7 @@ const getTopLeaderboard = async (limit = 10) => {
   const topUsers = await User.find()
     .sort({ points: -1, totalWins: -1 })
     .limit(limit)
-    .select('name matricNo department points totalWins');
+    .select('name department points totalWins');
   return topUsers.map((u, i) => ({ ...u.toObject(), rank: i + 1 }));
 };
 
@@ -287,8 +287,8 @@ io.on('connection', (socket) => {
     } else if (room.status === 'active' && room.gameId) {
       try {
         const game = await Game.findById(room.gameId)
-          .populate('whitePlayer', 'name matricNo points totalWins')
-          .populate('blackPlayer', 'name matricNo points totalWins');
+          .populate('whitePlayer', 'name points totalWins')
+          .populate('blackPlayer', 'name points totalWins');
 
         if (game) {
           socket.emit('roomRestored', {
@@ -358,9 +358,9 @@ io.on('connection', (socket) => {
 
     try {
       const game = await Game.findById(gameId)
-        .populate('whitePlayer', 'name matricNo')
-        .populate('blackPlayer', 'name matricNo')
-        .populate('winner', 'name matricNo');
+        .populate('whitePlayer', 'name')
+        .populate('blackPlayer', 'name')
+        .populate('winner', 'name');
       
       if (!game) {
         return socket.emit('gameError', { message: 'Game not found' });
@@ -476,8 +476,8 @@ io.on('connection', (socket) => {
 
       const game = new Game(gameData);
       await game.save();
-      await game.populate('whitePlayer', 'name matricNo points totalWins');
-      await game.populate('blackPlayer', 'name matricNo points totalWins');
+      await game.populate('whitePlayer', 'name points totalWins');
+      await game.populate('blackPlayer', 'name points totalWins');
 
       room.gameId = game._id;
 
@@ -644,9 +644,9 @@ io.on('connection', (socket) => {
       }
 
       await game.save();
-      await game.populate('whitePlayer', 'name matricNo');
-      await game.populate('blackPlayer', 'name matricNo');
-      await game.populate('winner', 'name matricNo');
+      await game.populate('whitePlayer', 'name');
+      await game.populate('blackPlayer', 'name');
+      await game.populate('winner', 'name');
 
       let roomCode = null;
       for (const [code, room] of Object.entries(gameRooms)) {
@@ -732,9 +732,9 @@ io.on('connection', (socket) => {
       }
 
       await game.save();
-      await game.populate('whitePlayer', 'name matricNo');
-      await game.populate('blackPlayer', 'name matricNo');
-      await game.populate('winner', 'name matricNo');
+      await game.populate('whitePlayer', 'name');
+      await game.populate('blackPlayer', 'name');
+      await game.populate('winner', 'name');
 
       io.to(`game:${gameId}`).emit('gameEnded', {
         gameId, status: game.status, winner: game.winner, reason: result
@@ -840,9 +840,9 @@ io.on('connection', (socket) => {
       }
 
       await game.save();
-      await game.populate('whitePlayer', 'name matricNo');
-      await game.populate('blackPlayer', 'name matricNo');
-      await game.populate('winner', 'name matricNo');
+      await game.populate('whitePlayer', 'name');
+      await game.populate('blackPlayer', 'name');
+      await game.populate('winner', 'name');
 
       const gameRoom = `game:${game._id.toString()}`;
       console.log('⭕ TTT UpdateBoard - emitting to:', gameRoom);

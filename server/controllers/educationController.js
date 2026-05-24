@@ -156,7 +156,7 @@ const generateModule = async (req, res, next) => {
     });
 
     await module.save();
-    await module.populate('creator', 'name matricNo');
+    await module.populate('creator', 'name');
 
     res.status(201).json({
       message: 'Module generated and saved successfully',
@@ -190,8 +190,8 @@ const getPublicModules = async (req, res, next) => {
 const getModule = async (req, res, next) => {
   try {
     const module = await Module.findById(req.params.id)
-      .populate('creator', 'name matricNo')
-      .populate('enrolledUsers', 'name matricNo');
+      .populate('creator', 'name')
+      .populate('enrolledUsers', 'name');
 
     if (!module) {
       return res.status(404).json({ message: 'Module not found' });
@@ -259,7 +259,7 @@ const createManualModule = async (req, res, next) => {
     });
 
     await module.save();
-    await module.populate('creator', 'name matricNo');
+    await module.populate('creator', 'name');
 
     res.status(201).json({
       message: 'Module created successfully',
@@ -303,7 +303,7 @@ const updateModule = async (req, res, next) => {
 
     module.isVerified = false;
     await module.save();
-    await module.populate('creator', 'name matricNo');
+    await module.populate('creator', 'name');
 
     res.json({
       message: 'Module updated successfully',

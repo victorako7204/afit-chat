@@ -29,9 +29,9 @@ router.get('/history/:userId', auth, async (req, res) => {
       ],
       status: { $in: ['finished', 'draw'] }
     })
-      .populate('whitePlayer', 'name matricNo')
-      .populate('blackPlayer', 'name matricNo')
-      .populate('winner', 'name matricNo')
+      .populate('whitePlayer', 'name')
+      .populate('blackPlayer', 'name')
+      .populate('winner', 'name')
       .sort({ endedAt: -1 })
       .limit(20);
     

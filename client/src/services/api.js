@@ -56,7 +56,10 @@ export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   register: (data) => api.post('/auth/register', data),
   getProfile: () => api.get('/auth/profile'),
-  getUsers: () => api.get('/auth/users')
+  updateProfile: (data) => api.put('/auth/profile', data),
+  getUsers: () => api.get('/auth/users'),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password })
 };
 
 export const chatAPI = {

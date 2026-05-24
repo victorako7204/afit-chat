@@ -23,8 +23,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     uppercase: true,
-    trim: true
+    trim: true,
+    select: false
   },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   role: {
     type: String,
     enum: ['student', 'moderator', 'admin'],

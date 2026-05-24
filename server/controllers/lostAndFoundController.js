@@ -30,7 +30,7 @@ const getPosts = async (req, res, next) => {
     const query = status ? { status } : {};
 
     const posts = await LostAndFound.find(query)
-      .populate('userId', 'name matricNo')
+      .populate('userId', 'name')
       .sort({ createdAt: -1 });
 
     res.json(posts);
@@ -42,7 +42,7 @@ const getPosts = async (req, res, next) => {
 const getPost = async (req, res, next) => {
   try {
     const post = await LostAndFound.findById(req.params.id)
-      .populate('userId', 'name matricNo');
+      .populate('userId', 'name');
 
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });

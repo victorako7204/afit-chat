@@ -5,6 +5,8 @@ const admin = require('../middleware/admin');
 const {
   register,
   login,
+  forgotPassword,
+  resetPassword,
   getProfile,
   updateProfile,
   getAllUsers,
@@ -13,6 +15,8 @@ const {
 
 router.post('/register', register);
 router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
 router.get('/profile', auth, getProfile);
 router.put('/profile', auth, updateProfile);
 router.get('/users', auth, getAllUsers);

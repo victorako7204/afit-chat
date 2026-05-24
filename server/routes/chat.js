@@ -32,7 +32,7 @@ router.get('/private/:targetUserId', auth, checkNotSuspended, async (req, res, n
     const messages = await Chat.find({ chatId })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate('senderId', 'name matricNo')
+      .populate('senderId', 'name')
       .lean();
     
     res.json({ messages: messages.reverse(), chatId });

@@ -166,11 +166,6 @@ const Profile = () => {
                 <h1 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   {profile.name}
                 </h1>
-                {profile.matricNo && (
-                  <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                    {profile.matricNo}
-                  </p>
-                )}
               </div>
               {isOwnProfile && !isEditing && (
                 <motion.button

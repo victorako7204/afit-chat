@@ -19,9 +19,9 @@ const createGroup = async (req, res, next) => {
     });
 
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.status(201).json({
       message: 'Group created successfully',
@@ -38,9 +38,9 @@ const getGroups = async (req, res, next) => {
     const query = department ? { department } : {};
 
     const groups = await Group.find(query)
-      .populate('createdBy', 'name matricNo')
-      .populate('members', 'name matricNo')
-      .populate('admins', 'name matricNo')
+      .populate('createdBy', 'name')
+      .populate('members', 'name')
+      .populate('admins', 'name')
       .sort({ createdAt: -1 });
 
     res.json(groups);
@@ -52,9 +52,9 @@ const getGroups = async (req, res, next) => {
 const getGroup = async (req, res, next) => {
   try {
     const group = await Group.findById(req.params.id)
-      .populate('createdBy', 'name matricNo')
-      .populate('members', 'name matricNo')
-      .populate('admins', 'name matricNo');
+      .populate('createdBy', 'name')
+      .populate('members', 'name')
+      .populate('admins', 'name');
 
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
@@ -83,9 +83,9 @@ const joinGroup = async (req, res, next) => {
 
     group.members.push(req.user._id);
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.json({ message: 'Joined group successfully', group });
   } catch (error) {
@@ -116,9 +116,9 @@ const joinByInvite = async (req, res, next) => {
 
     group.members.push(req.user._id);
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.json({ message: 'Joined group successfully via invite', group });
   } catch (error) {
@@ -168,9 +168,9 @@ const deleteGroup = async (req, res, next) => {
 const getMyGroups = async (req, res, next) => {
   try {
     const groups = await Group.find({ members: req.user._id })
-      .populate('createdBy', 'name matricNo')
-      .populate('members', 'name matricNo')
-      .populate('admins', 'name matricNo');
+      .populate('createdBy', 'name')
+      .populate('members', 'name')
+      .populate('admins', 'name');
 
     res.json(groups);
   } catch (error) {
@@ -195,9 +195,9 @@ const toggleLock = async (req, res, next) => {
 
     group.isLocked = !group.isLocked;
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.json({
       message: group.isLocked ? 'Group locked successfully' : 'Group unlocked successfully',
@@ -239,9 +239,9 @@ const makeAdmin = async (req, res, next) => {
 
     group.admins.push(targetUserId);
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.json({
       message: 'User promoted to admin successfully',
@@ -307,9 +307,9 @@ const updateGroup = async (req, res, next) => {
     if (department !== undefined) group.department = department.trim();
 
     await group.save();
-    await group.populate('createdBy', 'name matricNo');
-    await group.populate('members', 'name matricNo');
-    await group.populate('admins', 'name matricNo');
+    await group.populate('createdBy', 'name');
+    await group.populate('members', 'name');
+    await group.populate('admins', 'name');
 
     res.json({
       message: 'Group updated successfully',

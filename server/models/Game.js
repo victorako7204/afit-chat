@@ -146,7 +146,6 @@ gameSchema.statics.getDailyTop = async function(limit = 10) {
       $project: {
         _id: '$user._id',
         name: '$user.name',
-        matricNo: '$user.matricNo',
         department: '$user.department',
         dailyWins: 1,
         points: '$user.points',
@@ -189,7 +188,6 @@ gameSchema.statics.getWeeklyTop = async function(limit = 10) {
       $project: {
         _id: '$user._id',
         name: '$user.name',
-        matricNo: '$user.matricNo',
         department: '$user.department',
         weeklyWins: 1,
         points: '$user.points',
@@ -227,7 +225,6 @@ gameSchema.statics.getAllTimeTop = async function(limit = 10) {
       $project: {
         _id: '$user._id',
         name: '$user.name',
-        matricNo: '$user.matricNo',
         department: '$user.department',
         totalWins: 1,
         points: '$user.points'

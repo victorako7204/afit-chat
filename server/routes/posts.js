@@ -36,16 +36,16 @@ router.post('/', auth, async (req, res) => {
     });
     
     await post.save();
-    await post.populate('authorId', 'name matricNo department');
+    await post.populate('authorId', 'name department');
     
     const postObj = post.toJSON();
     if (post.isAnonymous) {
       postObj.authorName = 'Anonymous';
-      postObj.authorMatricNo = '';
+      postObj.authorMatricNo = undefined;
       postObj.authorDepartment = '';
     } else {
       postObj.authorName = post.authorId?.name || 'Unknown';
-      postObj.authorMatricNo = post.authorId?.matricNo || '';
+      postObj.authorMatricNo = undefined;
       postObj.authorDepartment = post.authorId?.department || '';
     }
     
@@ -72,7 +72,7 @@ router.get('/', auth, async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('authorId', 'name matricNo department')
+      .populate('authorId', 'name department')
       .lean();
     
     const postsWithAuthors = posts.map(post => {
@@ -80,14 +80,14 @@ router.get('/', auth, async (req, res) => {
         return {
           ...post,
           authorName: 'Anonymous',
-          authorMatricNo: '',
+          authorMatricNo: undefined,
           authorDepartment: ''
         };
       }
       return {
         ...post,
         authorName: post.authorId?.name || 'Unknown',
-        authorMatricNo: post.authorId?.matricNo || '',
+        authorMatricNo: undefined,
         authorDepartment: post.authorId?.department || ''
       };
     });
@@ -110,7 +110,7 @@ router.get('/', auth, async (req, res) => {
 router.get('/:id', auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
-      .populate('authorId', 'name matricNo department')
+      .populate('authorId', 'name department')
       .lean();
     
     if (!post) {
@@ -125,7 +125,7 @@ router.get('/:id', auth, async (req, res) => {
     } : {
       ...post,
       authorName: post.authorId?.name || 'Unknown',
-      authorMatricNo: post.authorId?.matricNo || '',
+      authorMatricNo: undefined,
       authorDepartment: post.authorId?.department || ''
     };
     
@@ -192,7 +192,7 @@ router.post('/:id/comment', auth, async (req, res) => {
     });
     
     await post.save();
-    await post.populate('comments.authorId', 'name matricNo');
+    await post.populate('comments.authorId', 'name');
     
     const app = req.app;
     const io = app.get('io');

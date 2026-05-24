@@ -47,7 +47,7 @@ router.post('/generate', auth, async (req, res) => {
     });
 
     await module.save();
-    await module.populate('creator', 'name matricNo');
+    await module.populate('creator', 'name');
 
     return res.status(201).json({
       success: true,

@@ -143,7 +143,7 @@ notificationSchema.statics.getUserNotifications = async function(userId, limit =
   })
     .sort({ createdAt: -1 })
     .limit(limit)
-    .populate('sender', 'name matricNo');
+    .populate('sender', 'name');
 };
 
 notificationSchema.statics.getUnreadCount = async function(userId) {

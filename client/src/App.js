@@ -5,7 +5,8 @@ import { useAuth } from './context/AuthContext';
 import { OnlineUsersProvider } from './context/OnlineUsersContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { connectSocket } from './services/socket';
-import Sidebar from './components/Sidebar';
+import SplashScreen from './components/SplashScreen';
+import BottomNav from './components/BottomNav';
 import GlobalAlert from './components/GlobalAlert';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -26,7 +27,6 @@ import GameArcade from './pages/GameArcade';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import LeaderboardPage from './pages/LeaderboardPage';
-import BottomNav from './components/BottomNav';
 
 export const ThemeContext = createContext({
   darkMode: false,
@@ -49,16 +49,52 @@ const PrivateRoute = ({ children }) => {
 
 const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
   const { darkMode } = useContext(ThemeContext);
-  
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-gray-50'}`}>
-      <Sidebar deferredPrompt={deferredPrompt} isInstalled={isInstalled} />
-      <main className="lg:ml-64 min-h-screen pb-16 lg:pb-0">
-        <div className="p-4 lg:p-8">
+    <div className="flex justify-center bg-gray-100">
+      <div className="relative w-full max-w-[500px] h-[100dvh] bg-white overflow-hidden scrollbar-none flex flex-col">
+        {!isOnline && (
+          <div className="absolute top-0 left-0 right-0 z-[60] animate-slide-down bg-neutral-900 text-white text-xs py-2 text-center font-medium font-sans">
+            No Internet Connection. Displaying cached application context data.
+          </div>
+        )}
+
+        <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <span className="text-white text-sm font-bold">Λ</span>
+            </div>
+            <span className="text-lg font-bold text-gray-900">Afit Chat</span>
+          </div>
+          <a
+            href="/public-chat"
+            className="px-4 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-md shadow-blue-500/30"
+          >
+            Chat
+          </a>
+        </header>
+
+        <main className="flex-1 overflow-y-auto scrollbar-none bg-white">
           {children}
-        </div>
-      </main>
-      <BottomNav />
+        </main>
+
+        <BottomNav />
+      </div>
     </div>
   );
 };
@@ -72,6 +108,7 @@ const App = () => {
     const saved = localStorage.getItem('theme');
     return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
   });
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     if (user?._id) {
@@ -125,7 +162,10 @@ const App = () => {
       }
     }
 
+    const timer = setTimeout(() => setShowSplash(false), 1500);
+
     return () => {
+      clearTimeout(timer);
       if (typeof window !== 'undefined') {
         window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         
@@ -145,6 +185,7 @@ const App = () => {
 
   return (
     <ThemeContext.Provider value={themeValue}>
+      {showSplash && <SplashScreen />}
       <Router>
         <OnlineUsersProvider>
           <NotificationProvider>
@@ -152,11 +193,11 @@ const App = () => {
             <Routes>
               <Route 
                 path="/login" 
-                element={user ? <Navigate to="/dashboard" /> : <Login />} 
+                element={user ? <Navigate to="/feed" /> : <Login />} 
               />
               <Route 
                 path="/register" 
-                element={user ? <Navigate to="/dashboard" /> : <Register />} 
+                element={user ? <Navigate to="/feed" /> : <Register />} 
               />
               
               <Route path="/dashboard" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Dashboard /></AppLayout></PrivateRoute>} />
@@ -178,7 +219,7 @@ const App = () => {
               <Route path="/profile/:id" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Profile /></AppLayout></PrivateRoute>} />
               <Route path="/leaderboard" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><LeaderboardPage /></AppLayout></PrivateRoute>} />
               
-              <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
+              <Route path="/" element={<Navigate to={user ? "/feed" : "/login"} />} />
             </Routes>
           </NotificationProvider>
         </OnlineUsersProvider>

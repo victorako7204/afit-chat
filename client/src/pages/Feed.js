@@ -30,7 +30,6 @@ const Feed = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [likedPosts, setLikedPosts] = useState(new Set());
   const [expandedComments, setExpandedComments] = useState(new Set());
   const [commentText, setCommentText] = useState({});
   const [replyingTo, setReplyingTo] = useState(null);
@@ -55,8 +54,8 @@ const Feed = () => {
       
       const postsWithLikes = newPosts.map(p => ({
         ...p,
-        isLiked: p.likes?.includes(user?._id),
-        likeCount: p.likes?.length || 0
+        isLikedByUser: p.likes?.includes(user?._id) || false,
+        likesCount: p.likes?.length || 0
       }));
       
       if (append) {
@@ -67,12 +66,6 @@ const Feed = () => {
       
       setHasMore(more);
       setPage(pageNum);
-      
-      const likedSet = new Set();
-      postsWithLikes.forEach(p => {
-        if (p.isLiked) likedSet.add(p._id);
-      });
-      setLikedPosts(likedSet);
     } catch (error) {
       console.error('Load posts error:', error);
     } finally {
@@ -110,8 +103,8 @@ const Feed = () => {
       
       const postWithLike = {
         ...post,
-        isLiked: false,
-        likeCount: post.likes?.length || 0
+        isLikedByUser: false,
+        likesCount: post.likes?.length || 0
       };
       setPosts(prev => [postWithLike, ...prev]);
     };
@@ -122,8 +115,8 @@ const Feed = () => {
           return {
             ...p,
             likes,
-            likeCount: likes.length,
-            isLiked: likes.includes(user?._id)
+            likesCount: likes.length,
+            isLikedByUser: likes.includes(user?._id)
           };
         }
         return p;
@@ -171,10 +164,31 @@ const Feed = () => {
   };
 
   const handleLike = async (postId) => {
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (post._id === postId) {
+        return {
+          ...post,
+          isLikedByUser: !post.isLikedByUser,
+          likesCount: post.isLikedByUser ? post.likesCount - 1 : post.likesCount + 1
+        };
+      }
+      return post;
+    }));
+
     try {
       await api.post(`/posts/${postId}/like`);
-    } catch (error) {
-      console.error('Like error:', error);
+    } catch (err) {
+      console.error("Like synchronization failed, reverting UI state:", err);
+      setPosts(prevPosts => prevPosts.map(post => {
+        if (post._id === postId) {
+          return {
+            ...post,
+            isLikedByUser: !post.isLikedByUser,
+            likesCount: post.isLikedByUser ? post.likesCount + 1 : post.likesCount - 1
+          };
+        }
+        return post;
+      }));
     }
   };
 
@@ -389,13 +403,13 @@ const Feed = () => {
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleLike(post._id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors ${
-                          post.isLiked 
+                          post.isLikedByUser 
                             ? 'bg-red-500/20 text-red-500' 
                             : darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'
                         }`}
                       >
-                        <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-current' : ''}`} />
-                        <span className="text-sm">{post.likeCount}</span>
+                        <Heart className={`w-4 h-4 ${post.isLikedByUser ? 'fill-current' : ''}`} />
+                        <span className="text-sm">{post.likesCount}</span>
                       </motion.button>
                       
                       <motion.button

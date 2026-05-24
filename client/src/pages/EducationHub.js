@@ -298,54 +298,37 @@ const EducationHub = () => {
     const currentStage = stages[currentStageIndex];
     
     return (
-      <div className="fixed inset-0 bg-white z-50 flex">
-        <div className="w-72 bg-gray-50 border-r border-gray-200 overflow-y-auto">
-          <div className="p-4 border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+      <div className="fixed inset-0 bg-white z-50 flex flex-col">
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
             <button
               onClick={handleClosePlayer}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3"
+              className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              Back to Gallery
+              Back
             </button>
-            <h2 className="font-semibold text-gray-900 line-clamp-2">
-              {selectedModule.title || 'Module'}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {stages.length} stages · {selectedModule.subject}
-            </p>
+            <span className="text-xs text-gray-500">{selectedModule.subject} · {stages.length} stages</span>
           </div>
-          
-          <div className="p-2">
+          <h2 className="text-base font-semibold text-gray-900 truncate pr-4">
+            {selectedModule.title || 'Module'}
+          </h2>
+          <div className="flex gap-1.5 mt-2 overflow-x-auto scrollbar-none pb-1">
             {stages.map((stage, index) => {
               if (!stage) return null;
               return (
                 <button
                   key={stage.moduleId ?? index}
                   onClick={() => setCurrentStageIndex(index)}
-                  className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                     currentStageIndex === index
-                      ? 'bg-purple-100 text-purple-900'
-                      : 'hover:bg-gray-100 text-gray-700'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                      currentStageIndex === index
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {index + 1}
-                    </span>
-                    <span className="text-sm font-medium truncate">{stage.heading || `Stage ${index + 1}`}</span>
-                  </div>
-                  {stage.quiz?.length > 0 && (
-                    <span className="ml-8 text-xs text-gray-400">
-                      {stage.quiz.length} quiz questions
-                    </span>
-                  )}
+                  {stage.heading || `Stage ${index + 1}`}
                 </button>
               );
             })}
@@ -353,14 +336,14 @@ const EducationHub = () => {
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto p-8">
+          <div className="px-4 py-4">
             {currentStage ? (
-              <>
-                <div className="mb-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="flex flex-col space-y-4">
+                <div>
+                  <h1 className="text-lg font-bold text-gray-900">
                     {currentStage.heading || `Stage ${currentStageIndex + 1}`}
                   </h1>
-                  <p className="text-gray-500">
+                  <p className="text-sm text-gray-500">
                     Stage {currentStageIndex + 1} of {stages.length}
                   </p>
                 </div>
@@ -408,12 +391,12 @@ const EducationHub = () => {
                 </div>
                 
                 {currentStage.quiz?.length > 0 && (
-                  <div className="bg-purple-50 rounded-xl p-6 border border-purple-100">
-                    <h3 className="text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                    <h3 className="text-base font-semibold text-purple-900 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      Quiz - Test Your Knowledge
+                      Quiz
                     </h3>
                     
                     {currentStage.quiz.map((quiz, quizIndex) => {
@@ -495,21 +478,21 @@ const EducationHub = () => {
                   </div>
                 )}
                 
-                <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-                  <Button
-                    variant="outline"
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                  <button
                     onClick={() => setCurrentStageIndex(prev => Math.max(0, prev - 1))}
                     disabled={currentStageIndex === 0}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg disabled:opacity-40 hover:bg-gray-200 transition-colors"
                   >
-                    ← Previous Stage
-                  </Button>
-                  <Button
-                    variant="primary"
+                    ← Previous
+                  </button>
+                  <button
                     onClick={() => setCurrentStageIndex(prev => Math.min(stages.length - 1, prev + 1))}
                     disabled={currentStageIndex === stages.length - 1}
+                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity"
                   >
-                    Next Stage →
-                  </Button>
+                    Next →
+                  </button>
                 </div>
               </>
             ) : (
@@ -740,56 +723,53 @@ const EducationHub = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full bg-white pt-16 px-4 pb-24 space-y-6">
+    <div className="flex flex-col min-h-full bg-white pt-16 pb-28 px-4 space-y-4">
       {showPlayerModal && (
         <div className="fixed inset-0 z-50">
           {renderPlayer()}
         </div>
       )}
       
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">AFIT Education Hub</h1>
-            <p className="text-gray-500 mt-1">Learn, create, and share educational modules</p>
-          </div>
-          
+      <div className="flex flex-col space-y-4 w-full">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-xl font-bold text-gray-900">AFIT Education Hub</h1>
+          <p className="text-sm text-gray-500">Learn, create, and share educational modules</p>
           {user && (
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setShowGenerateModal(true)}>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowGenerateModal(true)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+              >
+                <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 AI Generate
-              </Button>
-              <Button onClick={() => setShowCreateModal(true)}>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Create Module
-              </Button>
+                Create
+              </button>
             </div>
           )}
-        </div>
-        
+          
         {stats && (
-          <div className="grid grid-cols-4 gap-4 mb-8">
-            <Card className="text-center py-4">
-              <p className="text-3xl font-bold text-purple-600">{stats.totalModules || 0}</p>
-              <p className="text-sm text-gray-500">Total Modules</p>
-            </Card>
-            <Card className="text-center py-4">
-              <p className="text-3xl font-bold text-blue-600">{stats.totalViews || 0}</p>
-              <p className="text-sm text-gray-500">Total Views</p>
-            </Card>
-            <Card className="text-center py-4">
-              <p className="text-3xl font-bold text-green-600">{stats.verifiedCount || 0}</p>
-              <p className="text-sm text-gray-500">Verified</p>
-            </Card>
-            <Card className="text-center py-4">
-              <p className="text-3xl font-bold text-orange-600">{Array.isArray(enrolledModules) ? enrolledModules.length : 0}</p>
-              <p className="text-sm text-gray-500">Enrolled</p>
-            </Card>
+          <div className="flex gap-2">
+            {[
+              { label: 'Modules', value: stats.totalModules || 0, color: 'text-purple-600' },
+              { label: 'Views', value: stats.totalViews || 0, color: 'text-blue-600' },
+              { label: 'Verified', value: stats.verifiedCount || 0, color: 'text-green-600' },
+              { label: 'Enrolled', value: Array.isArray(enrolledModules) ? enrolledModules.length : 0, color: 'text-orange-600' },
+            ].map((s) => (
+              <div key={s.label} className="flex-1 text-center py-3 bg-gray-50 rounded-xl">
+                <p className={`text-lg font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[10px] text-gray-500">{s.label}</p>
+              </div>
+            ))}
           </div>
         )}
         
@@ -861,36 +841,36 @@ const EducationHub = () => {
         ) : (
           <>
             {activeTab === 'gallery' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col space-y-3 w-full">
                 {modules?.length > 0 ? (
                   modules.map(module => renderModuleCard(module))
                 ) : (
-                  <div className="col-span-full text-center py-12 text-gray-500">
-                    <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-center py-12 text-gray-500">
+                    <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
-                    <p className="text-lg">No modules found</p>
-                    <p className="text-sm">Try a different search or create a new module</p>
+                    <p className="text-base font-medium">No modules found</p>
+                    <p className="text-sm text-gray-400">Try a different search or create a new module</p>
                   </div>
                 )}
               </div>
             )}
             
             {activeTab === 'enrolled' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col space-y-3 w-full">
                 {enrolledModules?.length > 0 ? (
                   enrolledModules.map(module => renderModuleCard(module))
                 ) : (
-                  <div className="col-span-full text-center py-12 text-gray-500">
-                    <p className="text-lg">No enrolled modules yet</p>
-                    <p className="text-sm">Enroll in modules from the gallery to track your progress</p>
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-base font-medium">No enrolled modules yet</p>
+                    <p className="text-sm text-gray-400">Enroll in modules from the gallery to track your progress</p>
                   </div>
                 )}
               </div>
             )}
             
             {activeTab === 'my' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col space-y-3 w-full">
                 {myModules?.length > 0 ? (
                   myModules.map(module => (
                     <div key={module._id} className="relative">
@@ -913,9 +893,9 @@ const EducationHub = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full text-center py-12 text-gray-500">
-                    <p className="text-lg">You haven't created any modules yet</p>
-                    <p className="text-sm">Share your knowledge by creating educational content</p>
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-base font-medium">You haven't created any modules yet</p>
+                    <p className="text-sm text-gray-400">Share your knowledge by creating educational content</p>
                   </div>
                 )}
               </div>

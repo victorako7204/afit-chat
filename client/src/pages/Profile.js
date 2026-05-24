@@ -154,7 +154,7 @@ const Profile = () => {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 pb-20">
+    <div className="max-w-2xl mx-auto space-y-4 pt-16 px-4">
       <div className={`p-6 ${glassCard}`}>
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-500/30">

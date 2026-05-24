@@ -246,7 +246,7 @@ const Feed = () => {
   };
 
   return (
-    <div className="px-4 md:px-6 max-w-2xl mx-auto space-y-4 pb-20">
+    <div className="px-4 md:px-6 max-w-2xl mx-auto space-y-4 pt-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -740,15 +740,15 @@ const EducationHub = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-full bg-white pt-16 px-4 pb-24 space-y-6">
       {showPlayerModal && (
         <div className="fixed inset-0 z-50">
           {renderPlayer()}
         </div>
       )}
       
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">AFIT Education Hub</h1>
             <p className="text-gray-500 mt-1">Learn, create, and share educational modules</p>

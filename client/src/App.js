@@ -6,6 +6,7 @@ import { OnlineUsersProvider } from './context/OnlineUsersContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { connectSocket } from './services/socket';
 import SplashScreen from './components/SplashScreen';
+import TopNav from './components/TopNav';
 import BottomNav from './components/BottomNav';
 import GlobalAlert from './components/GlobalAlert';
 import Login from './pages/Login';
@@ -74,23 +75,12 @@ const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
           </div>
         )}
 
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white text-sm font-bold">Λ</span>
-            </div>
-            <span className="text-lg font-bold text-gray-900">Afit Chat</span>
-          </div>
-          <a
-            href="/public-chat"
-            className="px-4 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-md shadow-blue-500/30"
-          >
-            Chat
-          </a>
-        </header>
+        <TopNav />
 
         <main className="flex-1 overflow-y-auto scrollbar-none bg-white">
-          {children}
+          <div className="flex flex-col min-h-full pb-24 px-0">
+            {children}
+          </div>
         </main>
 
         <BottomNav />

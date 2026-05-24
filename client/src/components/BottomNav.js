@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ThemeContext } from '../App';
 
 const BottomNav = () => {
-  const { darkMode } = React.useContext(ThemeContext);
   const location = useLocation();
 
   const navItems = [

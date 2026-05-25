@@ -155,7 +155,6 @@ const QuizSimulator = () => {
 
         {questions.map((q, qIndex) => {
           const selected = answers[qIndex];
-          const isCorrect = submitted && selected === q.correctOption;
           const isWrong = submitted && selected && selected !== q.correctOption;
 
           return (

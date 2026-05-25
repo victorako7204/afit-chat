@@ -17,6 +17,7 @@ const gameRoutes = require('./routes/game');
 const leaderboardRoutes = require('./routes/leaderboard');
 const notificationsRoutes = require('./routes/notifications');
 const postsRoutes = require('./routes/posts');
+const questionRoutes = require('./routes/questionRoute');
 const errorHandler = require('./middleware/errorHandler');
 const Chat = require('./models/Chat');
 const Game = require('./models/Game');
@@ -72,7 +73,7 @@ app.use('/api/lessons', require('./routes/lessonRoute'));
 app.use('/api/games', gameRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/notifications', notificationsRoutes);
-app.use('/api/posts', postsRoutes);
+app.use('/api/questions', questionRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

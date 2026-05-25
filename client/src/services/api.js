@@ -129,4 +129,9 @@ export const educationAPI = {
   verifyModule: (id) => api.put(`/education/${id}/verify`)
 };
 
+export const quizAPI = {
+  getQuestions: (courseCode, limit = 10) =>
+    api.get('/questions', { params: { courseCode, limit } })
+};
+
 export default api;

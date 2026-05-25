@@ -21,6 +21,7 @@ import Library from './pages/Library';
 import AnonymousChat from './pages/AnonymousChat';
 import AdminDashboard from './pages/AdminDashboard';
 import EducationHub from './pages/EducationHub';
+import QuizSimulator from './pages/QuizSimulator';
 import ChessGame from './pages/ChessGame';
 import TicTacToe from './pages/TicTacToe';
 import GameLobby from './pages/GameLobby';
@@ -199,6 +200,7 @@ const App = () => {
               <Route path="/library" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Library /></AppLayout></PrivateRoute>} />
               <Route path="/anonymous-chat" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><AnonymousChat /></AppLayout></PrivateRoute>} />
               <Route path="/education" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><EducationHub /></AppLayout></PrivateRoute>} />
+              <Route path="/quiz" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><QuizSimulator /></AppLayout></PrivateRoute>} />
               <Route path="/admin" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><AdminDashboard /></AppLayout></PrivateRoute>} />
               <Route path="/chess" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><ChessGame /></AppLayout></PrivateRoute>} />
               <Route path="/tictactoe" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><TicTacToe /></AppLayout></PrivateRoute>} />

@@ -3,9 +3,6 @@ const Question = require('./models/Question');
 require('dotenv').config();
 
 const pastQuestionsData = [
-  // ==========================================
-  // GENERAL PHYSICS II (PHY 102) DATA REPOSITORY
-  // ==========================================
   {
     courseCode: 'PHY102',
     topic: 'Alternating Current (AC) Circuits',
@@ -76,10 +73,6 @@ const pastQuestionsData = [
     options: ['31/32', '15/16', '1/16', '1/32'],
     correctOption: 'C'
   },
-
-  // ==========================================
-  // MATHEMATICS II (MTH 102) DATA REPOSITORY
-  // ==========================================
   {
     courseCode: 'MTH102',
     topic: 'Functions & Limits',
@@ -118,19 +111,23 @@ const pastQuestionsData = [
 ];
 
 const seedDatabase = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB. Purging stale question pools...');
-
-    await Question.deleteMany({});
-
-    await Question.insertMany(pastQuestionsData);
-    console.log('Successfully seeded PHY 102 and MTH 102 questions collection!');
-    process.exit(0);
-  } catch (error) {
-    console.error('Seeding process error:', error);
-    process.exit(1);
-  }
+  await Question.deleteMany({});
+  await Question.insertMany(pastQuestionsData);
+  console.log('Successfully seeded PHY 102 and MTH 102 questions collection!');
 };
 
-seedDatabase();
+if (require.main === module) {
+  (async () => {
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
+      console.log('Connected to MongoDB. Purging stale question pools...');
+      await seedDatabase();
+      process.exit(0);
+    } catch (error) {
+      console.error('Seeding process error:', error);
+      process.exit(1);
+    }
+  })();
+}
+
+module.exports = { pastQuestionsData, seedDatabase };

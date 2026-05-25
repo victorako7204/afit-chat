@@ -89,6 +89,22 @@ const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ MongoDB connected');
+
+    try {
+      const Question = require('./models/Question');
+      const count = await Question.countDocuments();
+      if (count === 0) {
+        console.log('🌱 Database empty. Auto-seeding questions...');
+        const { seedDatabase } = require('./seedQuestions');
+        await seedDatabase();
+        console.log('✅ Auto-seed complete.');
+      } else {
+        console.log(`📊 Question repository already populated with ${count} records.`);
+      }
+    } catch (seedErr) {
+      console.error('⚠️ Auto-seed error:', seedErr.message);
+    }
+
     return true;
   } catch (err) {
     console.error('❌ MongoDB error:', err.message);

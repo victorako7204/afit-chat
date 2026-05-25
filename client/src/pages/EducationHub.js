@@ -494,7 +494,7 @@ const EducationHub = () => {
                     Next →
                   </button>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
                 No content available for this stage.

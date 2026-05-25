@@ -30,9 +30,17 @@ const QuizSimulator = () => {
     setScore(null);
     setAnswers({});
     try {
-      const res = await quizAPI.getQuestions(courseCode, questionLimit);
-      setQuestions(res.data);
-      setIsQuizStarted(true);
+      const cleanCode = courseCode.replace(/\s+/g, '');
+      const res = await quizAPI.getQuestions(cleanCode, questionLimit);
+      console.log('Frontend Received Questions Payload:', res.data);
+      const data = Array.isArray(res.data) ? res.data : (res.data?.questions || []);
+      if (data.length === 0) {
+        setError('No questions found for this course code. Please ensure the database has been seeded.');
+        setIsQuizStarted(false);
+      } else {
+        setQuestions(data);
+        setIsQuizStarted(true);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load questions');
     } finally {
@@ -110,7 +118,12 @@ const QuizSimulator = () => {
               disabled={loading}
               className="w-full py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg disabled:opacity-50 hover:opacity-90 transition-opacity"
             >
-              {loading ? 'Loading...' : 'Start Quiz'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" viewBox="0 0 24 24" />
+                  Fetching past questions...
+                </span>
+              ) : 'Start Quiz'}
             </button>
 
             <button
@@ -153,7 +166,18 @@ const QuizSimulator = () => {
           </div>
         )}
 
-        {questions.map((q, qIndex) => {
+        {questions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+            <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+            <p className="text-gray-500 font-medium">No questions loaded</p>
+            <button onClick={handleReset} className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+              ← Go Back
+            </button>
+          </div>
+        ) : (
+          questions.map((q, qIndex) => {
           const selected = answers[qIndex];
           const isWrong = submitted && selected && selected !== q.correctOption;
 
@@ -214,8 +238,9 @@ const QuizSimulator = () => {
               </div>
             </div>
           );
-        })}
-
+        })  
+        )}
+        
         {!submitted ? (
           <button
             onClick={handleSubmit}

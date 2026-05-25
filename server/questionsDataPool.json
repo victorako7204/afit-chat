@@ -1,0 +1,769 @@
+[
+  {
+    "courseCode": "PHY102",
+    "topic": "Simple Pendulum & Electrostatics",
+    "questionText": "A simple pendulum of period $T$ is suspended above a large horizontal metal sheet with uniformly distributed positive charges. If the bob is given some negative charges, its period of oscillation will be?",
+    "options": [
+      "Proportional to its amplitude",
+      "Equal to $T$",
+      "Less than $T$",
+      "Greater than $T$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Current-Versus-Voltage Behavior",
+    "questionText": "The current-versus-voltage behavior of a certain electrical device is shown in the given figure. What is the resistance of the device when the potential difference across it is $2\\text{ V}$?",
+    "options": [
+      "$1\\text{ }\\Omega$",
+      "$3\\text{ }\\Omega$",
+      "$2\\text{ }\\Omega$",
+      "$\\frac{1}{2}\\text{ }\\Omega$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Ohm's Law",
+    "questionText": "Ohm's law states that:",
+    "options": [
+      "Current flowing through an ohmic material is directly proportional to the applied voltage",
+      "The ratio of the current density to the electric field for ohmic materials is a constant",
+      "The ratio of the applied voltage to the current through an ohmic material defines the resistance of the material",
+      "All of the above"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Resistivity & Resistance",
+    "questionText": "A $20\\text{ m}$ long, $2\\text{ mm}$ radius wire has a resistivity of $5.5 \\times 10^{-8}\\text{ }\\Omega\\cdot\\text{m}$. Calculate its resistance.",
+    "options": [
+      "$8.76 \\times 10^{-2}\\text{ }\\Omega$",
+      "$5.5 \\times 10^{-2}\\text{ }\\Omega$",
+      "$1.0 \\times 10^{-1}\\text{ }\\Omega$",
+      "$2.0 \\times 10^{2}\\text{ }\\Omega$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Current Electricity",
+    "questionText": "The amount of charge flowing through a given cross sectional area of a conductor at a given time is a measure of:",
+    "options": [
+      "The voltage across the conductor",
+      "The resistance of the conductor",
+      "The current through the conductor",
+      "The power loss in the conductor"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electrostatics & Electroscopes",
+    "questionText": "A positively charged glass rod is brought near the disc of an uncharged gold leaf electroscope. The leaves diverge. Which of the following statements is correct?",
+    "options": [
+      "Negative charge is induced on the leaves",
+      "Positive charge is induced on one leaf and negative on the other",
+      "No charge is present on the leaves",
+      "Positive charge is induced on the leaves"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Waves Speed",
+    "questionText": "If the speed of X-rays, light and radio waves in vacuum are $V_X$, $V_L$ and $V_R$ respectively, which of the following is correct?",
+    "options": [
+      "$V_X > V_L > V_R$",
+      "$V_L = V_R = V_X$",
+      "$V_X < V_L < V_R$",
+      "None of the above"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Waves Properties",
+    "questionText": "Select the wrong statement from the following regarding Electromagnetic waves:",
+    "options": [
+      "Are produced by accelerating charge",
+      "Travel with same speed in all media",
+      "Are transverse",
+      "Travel with the speed of light"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Resistance & Wire Geometry",
+    "questionText": "A cylindrical wire has a radius $r$ and length $l$. If the length $l$ is doubled, what happens to the resistance of the wire?",
+    "options": [
+      "Half",
+      "Double",
+      "Same",
+      "Uncertain"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Engineering Design Factors",
+    "questionText": "The commandant asks you to design an automobile battery jumper cable that has a low resistance for the Physics department. What factors would you consider in your design? (I) Resistivity (II) Price (III) Geometry",
+    "options": [
+      "(I), (II)",
+      "(I) only",
+      "(I), (II), (III)",
+      "(I), (III)"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "AC Circuits & Inductance",
+    "questionText": "Calculate the inductance $L$ of the coil in the circuit shown (with a $240\\text{ V}$, $100\\text{ Hz}$ supply producing a $2\\text{ A}$ current).",
+    "options": [
+      "$14.4\\text{ H}$",
+      "$3.8\\text{ H}$",
+      "$0.6\\text{ H}$",
+      "$0.4\\text{ H}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Capacitors in AC Circuits",
+    "questionText": "When an AC voltage is applied to a capacitor, no power is consumed because the current:",
+    "options": [
+      "and voltage are $180^\\circ$ out of phase",
+      "and voltage are in phase",
+      "lags behind the voltage by $90^\\circ$",
+      "leads the voltage by $90^\\circ$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "AC Opposition",
+    "questionText": "The opposition to the flow of AC offered by the capacitor or inductor or both is called:",
+    "options": [
+      "Impedance",
+      "Reactive",
+      "Reactance",
+      "Resistance"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "AC Equations",
+    "questionText": "Write down the equation for a sinusoidal voltage of $\\frac{100}{\\pi}\\text{ Hz}$ and its peak value is $20\\text{ V}$.",
+    "options": [
+      "$20 \\sin(200\\pi t)$",
+      "$20 \\sin(200\\pi^2 t)$",
+      "$20 \\sin(200 t)$",
+      "$20 \\sin(100 t)$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "AC Voltage parameters",
+    "questionText": "What is the peak voltage and frequency of an AC represented by $V = 4 \\sin(900\\pi t)$ respectively?",
+    "options": [
+      "$4\\text{ V}, 900\\text{ Hz}$",
+      "$4\\text{ V}, 450\\text{ Hz}$",
+      "$4\\text{ V}, 200\\pi\\text{ Hz}$",
+      "$4\\text{ V}, 2\\pi f t$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Alternating Current (AC) Circuits",
+    "questionText": "Joseph designed a series RLC circuit that has a resistance of $12\\text{ }\\Omega$, an inductance of $0.15\\text{ H}$ and a capacitor of $100\\text{ }\\mu\\text{F}$ connected in series across a $100\\text{ V}$, $50\\text{ Hz}$ supply. Calculate the total circuit impedance.",
+    "options": [
+      "$19\\text{ }\\Omega$",
+      "$15\\text{ }\\Omega$",
+      "$9.12\\text{ }\\Omega$",
+      "$5.12\\text{ }\\Omega$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Current Electricity & Internal Resistance",
+    "questionText": "Halimat designed a cell that supplies a current of $2000\\text{ mA}$ and $1500\\text{ mA}$ through a $2\\text{ }\\Omega$ and a $6\\text{ }\\Omega$ resistor respectively. Calculate the internal resistance of the cell.",
+    "options": [
+      "$10.0\\text{ }\\Omega$",
+      "$13.0\\text{ }\\Omega$",
+      "$12.0\\text{ }\\Omega$",
+      "$14.0\\text{ }\\Omega$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetism & Maxwell Equations",
+    "questionText": "Which of the following Maxwell's laws (equations) relates the electric flux passing through a closed surface to the charge contained within the surface?",
+    "options": [
+      "Gauss's Magnetic Field Law",
+      "Faraday's Law",
+      "Gauss's Electric Field Law",
+      "Ampere's Law"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Magnetic Fields & Biot-Savart Law",
+    "questionText": "The statement that 'the magnetic field intensity at a point is directly proportional to the current flow, differential element length, sine of the angle between $\\Delta L$ and $P$, and inversely proportional to the square of the distance' is known as:",
+    "options": [
+      "Faraday's Law",
+      "Lorentz's Law",
+      "Lenz's Law",
+      "Biot-Savart Law"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Induction",
+    "questionText": "Abubakar designed a circuit where the magnetic flux passes perpendicular to the plane of the circuit and is directed into a sheet of paper. If the magnetic flux varies with respect to time according to the relation: $\\Phi = 2t^3 + 3t^2 + 8t + 5\\text{ mWb}$, what is the magnitude of the induced E.M.F in the loop when $t = 3\\text{ s}$?",
+    "options": [
+      "$80\\text{ V}$",
+      "$80\\text{ Wb}$",
+      "$80\\text{ mV}$",
+      "$80\\text{ mWb}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Alternating Current (AC) Circuits",
+    "questionText": "A capacitor which has an internal resistance of $10\\text{ }\\Omega$ and a capacitance value of $10\\text{ }\\mu\\text{F}$ is connected to a supply voltage given as $V(t) = 100 \\sin(314t)$. What is the Root Mean Square (RMS) of the Current?",
+    "options": [
+      "$0.701\\text{ A}$",
+      "$10\\text{ A}$",
+      "$0.995\\text{ A}$",
+      "$7.071\\text{ A}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Magnetic Fields & Particle Kinematics",
+    "questionText": "Determine the acceleration of an alpha particle of mass $6.65 \\times 10^{-27}\\text{ kg}$ that travels at right angles to a magnetic field with a speed of $6.0 \\times 10^5\\text{ m/s}$, given that the flux density of the field is $0.2\\text{ Wb/m}^2$. (Hint: Charge of an alpha particle is $2e = 3.2 \\times 10^{-19}\\text{ C}$).",
+    "options": [
+      "$2.89 \\times 10^{11}\\text{ m/s}^2$",
+      "$5.77 \\times 10^{12}\\text{ m/s}^2$",
+      "$2.89 \\times 10^{12}\\text{ m/s}^2$",
+      "$2.98 \\times 10^{12}\\text{ m/s}^2$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Induction & Faraday's Law",
+    "questionText": "Which law states that a changing magnetic flux within a surface induces an electromotive force (EMF) and an induced current, where the induced current creates a circulating electric field?",
+    "options": [
+      "Ampere's Law",
+      "Newton's Law",
+      "Faraday's Law",
+      "Current's Law"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Circuit Theory & Instrumentation",
+    "questionText": "From the schematic circuit diagram layout, determine the (i) current through the circuit and (ii) voltage across the $120\\text{ }\\Omega$ load when the AC connection terminal is exactly halfway of component A, and determine whether the system represents a potentiometer or a rheostat circuit configuration.",
+    "options": [
+      "$0.53\\text{ A}$ and $39.75\\text{ V}$",
+      "$0.50\\text{ A}$ and $275.0\\text{ V}$",
+      "$0.53\\text{ A}$ and $75.00\\text{ V}$",
+      "$2.67\\text{ A}$ and $39.75\\text{ V}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Transformer Mechanics",
+    "questionText": "Racheal designed a transformer that has a primary coil and a secondary coil where the number of loops is $500$ and $5000$ respectively. If the input voltage is $220\\text{ V}$, what is the output voltage?",
+    "options": [
+      "$2200\\text{ mV}$",
+      "$1100\\text{ mV}$",
+      "$2200\\text{ V}$",
+      "$110\\text{ V}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Ampere-Maxwell Law",
+    "questionText": "In the Ampere-Maxwell Law, a changing current or a changing electric flux through a surface produces a changing field of what specific classification?",
+    "options": [
+      "Current Field",
+      "Magnetic Field",
+      "Electric Field",
+      "Plane Field"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Quantum Physics & Photoelectric Effect",
+    "questionText": "The minimum frequency of light required to cleanly remove a bound valence electron from a target metal surface is universally referred to as the:",
+    "options": [
+      "Standard Frequency",
+      "Cut-off Wavelength",
+      "Threshold Frequency",
+      "Threshold Wavelength"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Atomic Transitions & Spectroscopy",
+    "questionText": "An electron within an atom makes a quantitative down-state quantum transition from $-1.5\\text{ eV}$ to $-13.6\\text{ eV}$. Calculate the absolute frequency of the emitted radiation photon.",
+    "options": [
+      "$3.96 \\times 10^{15}\\text{ Hz}$",
+      "$3.86 \\times 10^{15}\\text{ Hz}$",
+      "$2.96 \\times 10^{15}\\text{ Hz}$",
+      "$1.86 \\times 10^{15}\\text{ Hz}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Magnetic Fields & Long Straight Wires",
+    "questionText": "The mathematical magnitude of the surrounding magnetic field due to the active current $I$ flowing through a long straight wire evaluated at a point distance $r$ from the core wire is defined by which formula structural arrangement?",
+    "options": [
+      "$B = \\frac{\\mu_0 r}{2\\pi I}$",
+      "$B = \\frac{2\\pi}{\\mu_0 I}$",
+      "$B = \\frac{\\mu_0 I}{2\\pi r}$",
+      "$B = \\frac{\\mu_0 I}{2\\pi r^2}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Circuit Theory & Instrumentation",
+    "questionText": "Which of the following points represents a definitive operational advantage of using a Potentiometer terminal balancing system over a standard basic Voltmeter device?",
+    "options": [
+      "High degree of operational reading accuracy",
+      "No frictional structural reading loss inside the potentiometer",
+      "The baseline tracking measurement range can be linearly increased",
+      "All of the above parameters"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Dielectric Media Constants",
+    "questionText": "Consider the following three diagnostic material property statements:\\n(i) With a rise in ambient temperature, the dielectric constant $K$ of a liquid decreases.\\n(ii) The dielectric constant $K$ of a stable solid insulator cannot be infinity.\\n(iii) The SI unit of electric field strength is the Coulomb.\\nWhat is the correct True/False matching order pattern for these three items?",
+    "options": [
+      "True, True, False",
+      "False, True, True",
+      "True, False, False",
+      "False, False, True"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Induction",
+    "questionText": "A magnetic field of uniform flux density $10^{-2}\\text{ T}$ acts normal to a wrapped tracking coil of $50$ turns having an effective face cross-section area of $100\\text{ cm}^2$. Calculate the total E.M.F induced if the coil structure is completely removed from the magnetic field boundaries within a timeline duration of $0.1\\text{ second}$.",
+    "options": [
+      "$50\\text{ V}$",
+      "$0.05\\text{ V}$",
+      "$80\\text{ V}$",
+      "$40\\text{ V}$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Nuclear Physics & Mass Defect",
+    "questionText": "What is the structural mass defect value of a Cobalt-59 nucleus (atomic reference 29) which has an integrated experimental nucleus mass of $58.933\\text{ u}$, given standard free proton reference mass $M_p = 1.00078\\text{ u}$, and a free neutron reference mass $M_n = 1.0087\\text{ u}$ where $1\\text{ amu}$ calculation conversion factor equals $931.5\\text{ MeV/c}^2$?",
+    "options": [
+      "$7.9\\text{ MeV/c}^2$",
+      "$517.9\\text{ MeV}$",
+      "$79\\text{ MeV/c}^2$",
+      "$0.517\\text{ MeV}$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Alternating Current (AC) Circuits",
+    "questionText": "A sinusoidal voltage supply defined explicitly by the functional equation $V(t) = 100 \\cos(\\omega t + 30^\\circ)$ is wired directly into a pure resistance load of $50\\text{ }\\Omega$. Determine the peak maximum value of the running circuit current vector.",
+    "options": [
+      "$2\\text{ A}$",
+      "$5\\text{ A}$",
+      "$4\\text{ A}$",
+      "$6\\text{ A}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Nuclear Physics & Radioactivity",
+    "questionText": "The half-life breakdown index of raw institutional Radium material tracks exactly at $1699\\text{ years}$. Calculate the close equivalent value matching its overall mathematical Average Life timeline parameter.",
+    "options": [
+      "$2308\\text{ Years}$",
+      "$2450\\text{ Years}$",
+      "$2500\\text{ Years}$",
+      "$2700\\text{ Years}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Modern Physics & Mass Energy Equivalence",
+    "questionText": "If a modern atomic reaction release event frees exactly $4 \\times 10^{16}\\text{ Joules}$ of thermal energy, calculate the absolute mass defect value ($\\Delta m$) left behind by the reaction chain.",
+    "options": [
+      "$0.22\\text{ kg}$",
+      "$0.44\\text{ kg}$",
+      "$0.66\\text{ kg}$",
+      "$0.88\\text{ kg}$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Atomic Structure & Spectroscopy",
+    "questionText": "In the spectral emission line profiles of a standard Hydrogen atom structure, transitions and emissions terminating down directly onto energy level boundary $n = 2$ are structurally categorized under which collection series name?",
+    "options": [
+      "Paschen Series",
+      "Lyman Series",
+      "Balmer Series",
+      "Hydrogen Series"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Wave Mechanics & Electromagnetism",
+    "questionText": "Evaluate the accuracy parameters of these standalone structural wave properties:\\nI. All transverse waves are classified explicitly as electromagnetic waves.\\nII. All electromagnetic waves operate via transverse polarization dynamics.\\nIII. All transverse waves travel unhindered through a vacuum at the speed of light.\\nIV. All electromagnetic waves travel through a vacuum at a constant velocity speed $C = 300,000,000\\text{ m/s}$.\\nIdentify the option row containing only true analytical assertions.",
+    "options": [
+      "I, II and III",
+      "I and IV",
+      "II and IV",
+      "II, III and IV"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Transformer Mechanics & Power Steps",
+    "questionText": "Calculate the output secondary side terminal voltage of an experimental transformer built with an input primary side voltage of $100\\text{ V}$, given that the total wrap turns count on the primary coil winding is $10$. If the secondary coil contains exactly $20$ winding wire turns, evaluate the electrical layout classification state of the unit.",
+    "options": [
+      "$200\\text{ V, Step-up transformer configuration}$",
+      "$50\\text{ V, Step-down transformer configuration}$",
+      "$50\\text{ V, Step-up transformer configuration}$",
+      "$200\\text{ V, Step-down transformer configuration}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Alternating Current (AC) Circuits",
+    "questionText": "Chijioke designed an RLC series circuit configuration composed of a $100\\text{ }\\Omega$ resistor, an inductive coil of $0.9\\text{ H}$, and a $20\\text{ }\\mu\\text{F}$ capacitor terminal connected linearly across a $110\\text{ V}$, $60\\text{ Hz}$ power source. Calculate the total circuit network impedance to the nearest significant figure index.",
+    "options": [
+      "$196\\text{ Ohms}$",
+      "$16859\\text{ Ohms}$",
+      "$230\\text{ Ohms}$",
+      "$133\\text{ Ohms}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Circuit Components & Logic Instrumentation",
+    "questionText": "Review the electrical schematic symbol chart. Determine the specific circuit function mapped to Component Icon No 4.",
+    "options": [
+      "To convert AC to DC power streams",
+      "To convert DC to AC power profiles",
+      "To route voltage directly into a shunt ammeter",
+      "To measure live operational current lines directly"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Circuit Components & Logic Instrumentation",
+    "questionText": "Review the electrical component system reference symbols mapped on the instrumentation chart layout block below. Identify the hardware name for symbol component layout configuration No 2.",
+    "options": [
+      "Transistor component unit",
+      "Battery energy source line",
+      "Transformer flux node",
+      "Diode rectifying gate terminal"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Alternating Current (AC) Circuits",
+    "questionText": "What physical circuit dynamic defines the comprehensive total combined restrictive opposition effect of Resistance ($R$), Inductive Reactance ($X_L$), and Capacitive Reactance ($X_C$) measured inside an active Alternating Current electrical circuit network framework?",
+    "options": [
+      "Capacitive Reactance profile",
+      "Capacitive Inductance constant",
+      "Total System Impedance ($Z$)",
+      "Base Resistance of an AC Circuit"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Modern Physics & X-Ray Spectrometry",
+    "questionText": "Calculate the magnitude of the operational acceleration electrical potential difference that a diagnostic X-ray tube device must run under so that the minimum cutoff boundary wavelength of the emitted X-ray output spectrum measures exactly $10^{-8}\\text{ meters}$.",
+    "options": [
+      "$4.14 \\times 10^{15}\\text{ V}$",
+      "$1.24 \\times 10^{-6}\\text{ V}$",
+      "$4.14 \\times 10^{-15}\\text{ V}$",
+      "$1.24 \\times 10^3\\text{ V}$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Current Electricity & Conductors",
+    "questionText": "The physical internal resistance parameters of an active solid electrical conductor depend fundamentally upon all of the listed environmental and layout factors except for which selection variable?",
+    "options": [
+      "The fundamental nature and structural resistivity of the material base",
+      "The total structural length dimensions of the wire element",
+      "The magnetic permeability tracking factors of the material matrix",
+      "The ambient temperature conditions surrounding the active material"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Induction & Flux Links",
+    "questionText": "Samuel designed a balanced structural circular wire loop possessing a cross-sectional tracking face surface area of $5 \\times 10^{-2}\\text{ m}^2$ that rotates uniformly inside a stable $0.2\\text{ T}$ magnetic field zone. If the loop structure revolves cleanly about its diameter axis which sits perpendicular to the field lines, calculate the quantitative value of the magnetic flux linked through the center loop layout when its face plane is (i) completely normal to the field vectors and (ii) tilted at an angle incline of $60^\\circ$ relative to the field lines.",
+    "options": [
+      "(i) $1.0 \\times 10^{-2}\\text{ Wb}$ and (ii) $1.82 \\times 10^{-3}\\text{ Wb}$",
+      "(i) $1.1 \\times 10^{-3}\\text{ Wb}$ and (ii) $8.66 \\times 10^{15}\\text{ Wb}$",
+      "(i) $1.1 \\times 10^{-2}\\text{ Wb}$ and (ii) $8.66 \\times 10^{-3}\\text{ Wb}$",
+      "(i) $1.0 \\times 10^{-2}\\text{ Wb}$ and (ii) $8.66 \\times 10^{-3}\\text{ Wb}$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Circuit Theory & Instrumentation",
+    "questionText": "Which electrical measurement instrument tool is purposefully configured and used to track, scale, and evaluate ultra-small sub-fractional current measurement units smoothly?",
+    "options": [
+      "Mechanical Alternator Generator",
+      "High-sensitivity Micro-ammeter component",
+      "Digital Voltmeter unit",
+      "None of the above options"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Capacitor Networks",
+    "questionText": "Determine the net equivalent total capacitance across terminal points A and B for the integrated electronic layout structure composed of three separate $20\\text{ }\\mu\\text{F}$ capacitors mounted alongside an isolated $10\\text{ }\\mu\\text{F}$ balance lane element.",
+    "options": [
+      "$20.0\\text{ }\\mu\\text{F}$",
+      "$70.0\\text{ }\\mu\\text{F}$",
+      "$4.0\\text{ }\\mu\\text{F}$",
+      "$50.0\\text{ }\\mu\\text{F}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Magnetic Fields & Solenoids",
+    "questionText": "Musa designed a tight helical solenoid structure containing exactly $300$ turns tightly wound around a supportive uniform cylinder possessing a diameter of $1.20\\text{ cm}$ and an axial length tracking at $14.0\\text{ cm}$. If the core wire excitation driving current through the copper coils measures exactly $0.410\\text{ A}$, calculate the vector magnitude of the magnetic field generated cleanly inside and near the absolute longitudinal middle area of the solenoid structure.",
+    "options": [
+      "$5.1 \\times 10^{-2}\\text{ T}$",
+      "$1.1 \\times 10^{-2}\\text{ T}$",
+      "$1.1 \\times 10^3\\text{ T}$",
+      "$1.1 \\times 10^{-3}\\text{ T}$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Wave Spectrum",
+    "questionText": "Which of the following structured electromagnetic wave taxonomy arrangements displays the corresponding radiation categories listed strictly in order of monotonically decreasing wavelength parameter dimensions?",
+    "options": [
+      "Visible light waves, diagnostic X-rays, microwaves, and gamma-rays",
+      "Gamma-rays, diagnostic X-rays, visible light waves, and microwaves",
+      "Microwaves, visible light waves, diagnostic X-rays, and gamma-rays",
+      "Gamma-rays, microwaves, diagnostic X-rays, and visible light waves"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "DC Circuit Networks & Kirchhoff Rules",
+    "questionText": "Abubakar connected a battery composed of three separate electrochemical cells wired in a tight series path arrangement, where each individual cell provides an independent open-circuit e.m.f. value of $3.0\\text{ V}$ and carries an internal series resistance penalty factor of $1.2\\text{ Ohms}$. This combined battery block is hooked up to an external load resistance layout composed of a $4\\text{ Ohms}$ discrete resistor wired in series directly with a parallel current-divider combo containing two independent $20\\text{ Ohms}$ resistors. Determine the total stable current draw passing through the circuit lines.",
+    "options": [
+      "$1.05\\text{ A}$",
+      "$1.50\\text{ A}$",
+      "$0.35\\text{ A}$",
+      "$0.83\\text{ A}$"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Nuclear Physics & Radioactivity",
+    "questionText": "Calculate the exact structural fractional ratio of the constituent target atoms inside a radioactive material pile that will remain unbroken and left behind after an elapsed operational timeline of $80\\text{ years}$, if the characteristic half-life decay index constant of the material base is precisely $20\\text{ years}$.",
+    "options": [
+      "$31/32\\text{ factor remaining}$",
+      "$15/16\\text{ factor remaining}$",
+      "$1/16\\text{ factor remaining}$",
+      "$1/32\\text{ factor remaining}$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Capacitors & Dielectric Fields",
+    "questionText": "A parallel plate capacitor hardware configuration is connected across an electrical charging potential difference tracking at $10.0\\text{ V}$ and accumulates an electrostatic storage load of $5.0\\text{ }\\mu\\text{C}$ of charge. If the internal component plate physical separation distance measures exactly $1.00\\text{ mm}$, evaluate the mathematical surface area requirements of the plate layout.",
+    "options": [
+      "$1.05 \\times 10^7\\text{ m}^2$",
+      "$5.65 \\times 10^7\\text{ m}^2$",
+      "$3.05 \\times 10^7\\text{ m}^2$",
+      "$2.15 \\times 10^7\\text{ m}^2$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electromagnetic Induction & Antennas",
+    "questionText": "Florence installed a functional circular satellite tracking antenna array capturing a face area cross-section of $6\\text{ m}^2$ at a strategic geographic site in Mando. The reference terminal plane defining the cross-sectional face of the antenna aperture is tilted at an angle incline of $47^\\circ$ relative to the incoming directional vector of Earth's local geomagnetic field lines. If the absolute vector intensity magnitude of the Earth's magnetic field tracking at the Mando site is precisely $40773.9\\text{ nT}$, calculate the net mathematical magnetic flux linked cleanly through the antenna infrastructure.",
+    "options": [
+      "$1178.932\\text{ }\\mu\\text{Wb}$",
+      "$187.932\\text{ }\\mu\\text{Wb}$",
+      "$17620.000\\text{ }\\mu\\text{Wb}$",
+      "$178.932\\text{ }\\mu\\text{Wb}$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Coulomb's Law Definition",
+    "questionText": "State Coulomb's Law regarding electrostatic forces between point charges.",
+    "options": [
+      "Electrostatic force is directly proportional to the product of charges $q_1 q_2$ and inversely proportional to the square of their distance apart $r^2$",
+      "Electrostatic force is inversely proportional to the product of charges and directly proportional to the distance",
+      "Electrostatic force depends linearly on velocity vectors",
+      "None of the above"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Electrostatic Force Scaling",
+    "questionText": "Two charges $q_1$ and $q_2$ with electrostatic force $F$ are separated by a distance $r$. By what factor will the distance between them be increased or reduced to increase the force by a factor of $2$?",
+    "options": [
+      "Reduced by a factor of $2$",
+      "Increased by a factor of $\\sqrt{2}$",
+      "Reduced by a factor of $\\sqrt{2}$",
+      "Increased by a factor of $2$"
+    ],
+    "correctOption": "C",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Resultant Force vectors",
+    "questionText": "Consider charges $q_1 = 20\\text{ }\\mu\\text{C}$ at position $(0,10\\text{ cm})$ and $q_2 = -5\\text{ }\\mu\\text{C}$ at $(20\\text{ cm}, 10\\text{ cm})$, and a third charge $q_3 = -10\\text{ }\\mu\\text{C}$ at origin $(0,0)$. Calculate the magnitude of the resultant net force acting on charge $q_1$.",
+    "options": [
+      "$22.5\\text{ N}$",
+      "$180.0\\text{ N}$",
+      "$202.5\\text{ N}$",
+      "$24.8\\text{ N}$"
+    ],
+    "correctOption": "D",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Capacitance Definition",
+    "questionText": "What is the capacitance of a capacitor defined as?",
+    "options": [
+      "The ability of a capacitor to store electric charge ($C = \\frac{Q}{V}$)",
+      "The opposition of electric charge loops",
+      "The internal magnetic flux lines generated per turn",
+      "The rate of heating energy dissipated per second"
+    ],
+    "correctOption": "A",
+    "diagramSvg": null
+  },
+  {
+    "courseCode": "PHY102",
+    "topic": "Parallel Capacitors Networking",
+    "questionText": "Calculate the total equivalent capacitance and absolute accumulated net charge $Q$ for a parallel network configuration consisting of $5\\text{ }\\mu\\text{F}$, $3\\text{ }\\mu\\text{F}$, and $2\\text{ }\\mu\\text{F}$ capacitors connected across a potential difference of $V = 4\\text{ V}$.",
+    "options": [
+      "$1.2\\text{ }\\mu\\text{F}$ and $4.8\\text{ }\\mu\\text{C}$",
+      "$10\\text{ }\\mu\\text{F}$ and $40\\text{ }\\mu\\text{C}$",
+      "$10\\text{ }\\mu\\text{F}$ and $2.5\\text{ }\\mu\\text{C}$",
+      "$5\\text{ }\\mu\\text{F}$ and $20\\text{ }\\mu\\text{C}$"
+    ],
+    "correctOption": "B",
+    "diagramSvg": null
+  }
+]

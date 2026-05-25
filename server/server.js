@@ -95,9 +95,13 @@ const connectDB = async () => {
       const count = await Question.countDocuments();
       if (count === 0) {
         console.log('🌱 Database empty. Auto-seeding questions...');
-        const { seedDatabase } = require('./seedQuestions');
-        await seedDatabase();
-        console.log('✅ Auto-seed complete.');
+        const fs = require('fs');
+        const path = require('path');
+        const dataPath = path.join(__dirname, 'questionsDataPool.json');
+        const pastQuestionsData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+        await Question.deleteMany({});
+        await Question.insertMany(pastQuestionsData);
+        console.log(`✅ Auto-seed complete. Inserted ${pastQuestionsData.length} questions.`);
       } else {
         console.log(`📊 Question repository already populated with ${count} records.`);
       }

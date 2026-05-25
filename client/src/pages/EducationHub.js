@@ -772,6 +772,7 @@ const EducationHub = () => {
             ))}
           </div>
         )}
+        </div>
         
         <div className="flex gap-6 mb-6">
           <div className="flex-1">

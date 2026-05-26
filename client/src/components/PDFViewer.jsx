@@ -101,7 +101,7 @@ const PDFViewer = ({ fileUrl, onClose }) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-auto p-3 w-full flex flex-col items-center justify-start">
+      <div className="flex-1 w-full h-full flex flex-col items-center overflow-x-auto overflow-y-auto [webkit-overflow-scrolling:touch]">
         <Document
           file={fileUrl}
           onLoadSuccess={onLoadSuccess}
@@ -120,7 +120,7 @@ const PDFViewer = ({ fileUrl, onClose }) => {
             <Page
               key={i}
               pageNumber={i + 1}
-              width={(containerWidth - 24) * scale}
+              width={Math.min(containerWidth - 32, 800) * scale}
               renderTextLayer={true}
               renderAnnotationLayer={false}
               className="shadow-2xl rounded-sm border border-slate-800/80 my-3 transition-transform duration-150 ease-out max-w-none"

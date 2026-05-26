@@ -28,6 +28,11 @@ const Library = () => {
     setShowPdfViewer(true);
   };
 
+  const handleClosePdfViewer = () => {
+    setShowPdfViewer(false);
+    setSelectedPdfUrl(null);
+  };
+
   const fetchResources = useCallback(async () => {
     try {
       const res = await libraryAPI.getResources(filter);
@@ -188,7 +193,7 @@ const Library = () => {
       )}
 
       {showPdfViewer && selectedPdfUrl && (
-        <PDFViewer fileUrl={selectedPdfUrl} onClose={() => { setShowPdfViewer(false); setSelectedPdfUrl(null); }} />
+        <PDFViewer fileUrl={selectedPdfUrl} onClose={handleClosePdfViewer} />
       )}
 
       <Modal

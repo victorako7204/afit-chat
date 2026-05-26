@@ -55,52 +55,53 @@ const PDFViewer = ({ fileUrl, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-slate-950 z-50 flex flex-col w-screen h-screen select-none"
+      className="fixed inset-0 bg-slate-950 z-50 flex flex-col w-screen h-screen"
       onContextMenu={handleContextMenu}
     >
-      <button
-        onClick={onClose}
-        className="absolute top-4 left-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-colors"
-        aria-label="Close PDF Viewer"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-
-      <div className="absolute top-4 right-4 z-10 text-white/50 text-xs bg-black/30 rounded-full px-3 py-1">
-        {numPages ? `${numPages} page${numPages > 1 ? 's' : ''}` : ''}
-      </div>
-
-      <div className="flex items-center justify-center gap-3 py-2 bg-slate-900/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-3 py-2 bg-slate-900/80 backdrop-blur-sm">
         <button
-          onClick={() => setScale(prev => Math.max(prev - 0.2, 0.6))}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors"
-          aria-label="Zoom Out"
+          onClick={onClose}
+          className="flex items-center gap-1.5 text-white/80 text-sm hover:text-white transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
+          Back to Library
         </button>
-        <span className="text-white/70 text-xs font-mono w-12 text-center">{Math.round(scale * 100)}%</span>
-        <button
-          onClick={() => setScale(prev => Math.min(prev + 0.2, 3.0))}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors"
-          aria-label="Zoom In"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setScale(1.0)}
-          className="px-3 py-1.5 text-xs font-medium text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-        >
-          Reset
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setScale(prev => Math.max(prev - 0.2, 0.7))}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white text-xs hover:bg-white/20 transition-colors"
+            aria-label="Zoom Out"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            </svg>
+          </button>
+          <span className="text-white/70 text-xs font-mono w-10 text-center">{Math.round(scale * 100)}%</span>
+          <button
+            onClick={() => setScale(prev => Math.min(prev + 0.2, 2.5))}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white text-xs hover:bg-white/20 transition-colors"
+            aria-label="Zoom In"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setScale(1.0)}
+            className="px-2.5 py-1 text-xs font-medium text-white bg-white/10 rounded hover:bg-white/20 transition-colors"
+          >
+            Reset
+          </button>
+          {numPages && (
+            <span className="text-white/40 text-xs ml-1">{numPages} p.</span>
+          )}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-auto p-2 w-full flex flex-col items-center justify-start">
+      <div className="flex-1 overflow-y-auto overflow-x-auto p-3 w-full flex flex-col items-center justify-start">
         <Document
           file={fileUrl}
           onLoadSuccess={onLoadSuccess}
@@ -119,10 +120,10 @@ const PDFViewer = ({ fileUrl, onClose }) => {
             <Page
               key={i}
               pageNumber={i + 1}
-              width={(containerWidth - 16) * scale}
+              width={(containerWidth - 24) * scale}
               renderTextLayer={true}
               renderAnnotationLayer={false}
-              className="shadow-2xl rounded-sm my-3 border border-slate-700/50 transition-transform duration-100 ease-out max-w-none"
+              className="shadow-2xl rounded-sm border border-slate-800/80 my-3 transition-transform duration-150 ease-out max-w-none"
             />
           ))}
         </Document>

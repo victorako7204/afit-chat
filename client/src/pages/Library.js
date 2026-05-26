@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { libraryAPI } from '../services/api';
 import { format } from 'date-fns';
 import { Button, Card, Input, Textarea, Modal } from '../components/UI';
+import PDFViewer from '../components/PDFViewer';
 
 const Library = () => {
   const { user } = useAuth();
@@ -10,8 +11,8 @@ const Library = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [showPdfModal, setShowPdfModal] = useState(false);
-  const [selectedPdf, setSelectedPdf] = useState(null);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState(null);
   const [filter, setFilter] = useState('');
   const [uploading, setUploading] = useState(false);
   const [newResource, setNewResource] = useState({
@@ -22,17 +23,9 @@ const Library = () => {
   });
   const [error, setError] = useState('');
 
-  const getPdfViewerUrl = (url) => {
-    if (!url || typeof url !== 'string') return null;
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) return null;
-    const encodedUrl = encodeURIComponent(trimmedUrl);
-    return `https://docs.google.com/viewer?url=${encodedUrl}&embedded=true`;
-  };
-
   const handleViewPdf = (resource) => {
-    setSelectedPdf(resource);
-    setShowPdfModal(true);
+    setSelectedPdfUrl(resource.fileUrl);
+    setShowPdfViewer(true);
   };
 
   const fetchResources = useCallback(async () => {
@@ -105,12 +98,6 @@ const Library = () => {
       fetchResources();
     } catch (err) {
       // Silently handle error
-    }
-  };
-
-  const handleDownload = (url) => {
-    if (url) {
-      window.open(url, '_blank');
     }
   };
 
@@ -200,55 +187,9 @@ const Library = () => {
         </div>
       )}
 
-      <Modal
-        isOpen={showPdfModal}
-        onClose={() => {
-          setShowPdfModal(false);
-          setSelectedPdf(null);
-        }}
-        title={selectedPdf?.title || 'PDF Viewer'}
-        size="xl"
-      >
-        {selectedPdf && (
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">{selectedPdf.description}</p>
-              <p className="text-xs text-gray-400 mt-2">
-                {selectedPdf.department} · Uploaded by {selectedPdf.uploadedBy?.name}
-              </p>
-            </div>
-            <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-100" style={{ height: '70vh' }}>
-              {(() => {
-                const viewerUrl = getPdfViewerUrl(selectedPdf.fileUrl);
-                if (!viewerUrl) {
-                  return (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      <p>Unable to load PDF. Please download instead.</p>
-                    </div>
-                  );
-                }
-                return (
-                  <iframe
-                    src={viewerUrl}
-                    title={selectedPdf.title || 'PDF Viewer'}
-                    className="w-full h-full"
-                    style={{ minHeight: '60vh' }}
-                    frameBorder="0"
-                  />
-                );
-              })()}
-            </div>
-            <div className="flex justify-between items-center pt-2">
-              <Button variant="secondary" size="sm" onClick={() => handleDownload(selectedPdf.fileUrl)}>
-                Download PDF
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => { setShowPdfModal(false); setSelectedPdf(null); }}>
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      {showPdfViewer && selectedPdfUrl && (
+        <PDFViewer fileUrl={selectedPdfUrl} onClose={() => { setShowPdfViewer(false); setSelectedPdfUrl(null); }} />
+      )}
 
       <Modal
         isOpen={showModal}

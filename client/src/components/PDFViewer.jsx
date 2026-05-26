@@ -1,30 +1,16 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { List, useListRef } from 'react-window';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const PageRow = memo(({ index, style, data }) => (
-  <div style={style} className="flex justify-center py-1">
-    <Page
-      pageNumber={index + 1}
-      width={data}
-      renderTextLayer={false}
-      renderAnnotationLayer={false}
-      className="shadow-lg"
-    />
-  </div>
-));
-
 const PDFViewer = ({ fileUrl, onClose }) => {
   const [numPages, setNumPages] = useState(null);
-  const [pageWidth, setPageWidth] = useState(window.innerWidth - 32);
-  const listRef = useListRef();
+  const [containerWidth, setContainerWidth] = useState(window.innerWidth);
 
   useEffect(() => {
-    const handleResize = () => setPageWidth(window.innerWidth - 32);
+    const handleResize = () => setContainerWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -53,11 +39,22 @@ const PDFViewer = ({ fileUrl, onClose }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'pdf-viewer-canvas-fix';
+    style.textContent = `.react-pdf__Page__canvas { max-width: 100% !important; height: auto !important; }`;
+    document.head.appendChild(style);
+    return () => {
+      const el = document.getElementById('pdf-viewer-canvas-fix');
+      if (el) el.remove();
+    };
+  }, []);
+
   const onLoadSuccess = ({ numPages }) => setNumPages(numPages);
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900 z-50 flex flex-col"
+      className="fixed inset-0 bg-slate-900 z-50 flex flex-col w-full h-full"
       onContextMenu={handleContextMenu}
     >
       <button
@@ -74,7 +71,7 @@ const PDFViewer = ({ fileUrl, onClose }) => {
         {numPages ? `${numPages} page${numPages > 1 ? 's' : ''}` : ''}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 w-full flex flex-col items-center justify-start scroll-smooth">
         <Document
           file={fileUrl}
           onLoadSuccess={onLoadSuccess}
@@ -89,18 +86,16 @@ const PDFViewer = ({ fileUrl, onClose }) => {
             </div>
           }
         >
-          {numPages && (
-            <List
-              listRef={listRef}
-              className="h-full w-full"
-              defaultHeight={window.innerHeight}
-              rowCount={numPages}
-              rowHeight={pageWidth * 1.4}
-              rowComponent={PageRow}
-              rowProps={pageWidth}
-              overscanCount={1}
+          {numPages && Array.from({ length: numPages }, (_, i) => (
+            <Page
+              key={i}
+              pageNumber={i + 1}
+              width={containerWidth - 32}
+              renderTextLayer={true}
+              renderAnnotationLayer={false}
+              className="shadow-xl rounded my-2 mx-auto max-w-full"
             />
-          )}
+          ))}
         </Document>
       </div>
     </div>

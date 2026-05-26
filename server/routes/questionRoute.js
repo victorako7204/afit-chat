@@ -8,9 +8,11 @@ router.get('/', async (req, res, next) => {
     if (!courseCode) {
       return res.status(400).json({ message: 'courseCode query parameter is required' });
     }
-    const questions = await Question.find({ courseCode })
-      .limit(Number(limit) || 10)
-      .lean();
+    let query = Question.find({ courseCode });
+    if (limit && Number(limit) > 0) {
+      query = query.limit(Number(limit));
+    }
+    const questions = await query.lean();
     res.json(questions);
   } catch (err) {
     next(err);

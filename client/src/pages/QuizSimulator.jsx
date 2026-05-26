@@ -1,15 +1,23 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { quizAPI } from '../services/api';
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 const COURSES = [
   { value: 'PHY102', label: 'PHY 102 (General Physics II)' },
   { value: 'MTH102', label: 'MTH 102 (Functions, Differentiation, Integration)' }
 ];
 
-const LIMITS = [5, 10, 20];
+const LIMITS = [5, 10, 20, 30, 50, 0];
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+
+const mdComponents = {
+  p: ({ children }) => <span className="text-sm text-gray-900 leading-relaxed">{children}</span>,
+};
 
 const QuizSimulator = () => {
   const navigate = useNavigate();
@@ -108,7 +116,7 @@ const QuizSimulator = () => {
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white appearance-none"
               >
                 {LIMITS.map(n => (
-                  <option key={n} value={n}>{n} questions</option>
+                  <option key={n} value={n}>{n === 0 ? 'All Questions' : `${n} questions`}</option>
                 ))}
               </select>
             </label>
@@ -190,7 +198,9 @@ const QuizSimulator = () => {
                 <span className="text-xs font-bold text-purple-600 mt-0.5 shrink-0">
                   {qIndex + 1}.
                 </span>
-                <p className="text-sm text-gray-900 leading-relaxed">{q.questionText}</p>
+                <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]} components={mdComponents}>
+                  {q.questionText}
+                </ReactMarkdown>
               </div>
 
               <div className="flex flex-col space-y-2">
@@ -231,7 +241,11 @@ const QuizSimulator = () => {
                       }`}>
                         {label}
                       </span>
-                      <span className="text-gray-800">{option}</span>
+                      <span className="text-gray-800">
+                        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]} components={mdComponents}>
+                          {option}
+                        </ReactMarkdown>
+                      </span>
                     </button>
                   );
                 })}

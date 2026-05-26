@@ -56,7 +56,7 @@ const EducationHub = () => {
       if (search) params.search = search;
       
       const res = await educationAPI.getPublicModules(params);
-      setModules(res.data?.modules || res.data || []);
+      setModules(res.data?.modules || []);
     } catch (err) {
       console.error('Error fetching modules:', err);
       setErrorMessage('Failed to load modules. Please try again.');

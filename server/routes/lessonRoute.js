@@ -13,7 +13,36 @@ router.post('/generate', auth, async (req, res) => {
 
   let messageContent;
   try {
-    messageContent = await generateEducationalContent(topic);
+    messageContent = await generateEducationalContent([
+      {
+        role: "system",
+        content: "You are the AFIT Academic Engine. You must return a strict JSON object matching the exact requested structural schema. Do not include markdown code block formatting or introductory text."
+      },
+      {
+        role: "user",
+        content: `Generate a simplified learning module for the topic: \"${topic}\". Structure it explicitly as a JSON object with this shape:
+      {
+        \"courseTitle\": \"String\",
+        \"subject\": \"Math|Physics|GST|COS|Chemistry|Biology|Engineering|Computer Science|Other\",
+        \"description\": \"String\",
+        \"tags\": [\"tag1\", \"tag2\"],
+        \"modules\": [
+          {
+            \"moduleId\": 1,
+            \"moduleTitle\": \"String\",
+            \"content\": \"Step-by-step simplified explanations using LaTeX...\",
+            \"quiz\": [
+              {
+                \"question\": \"String\",
+                \"options\": [\"A\", \"B\", \"C\", \"D\"],
+                \"correctAnswer\": \"String\"
+              }
+            ]
+          }
+        ]
+      }`
+      }
+    ]);
   } catch (error) {
     console.error('Failed to communicate with OpenRouter:', error.message);
     return res.status(500).json({

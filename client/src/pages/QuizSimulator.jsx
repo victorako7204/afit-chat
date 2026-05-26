@@ -271,10 +271,10 @@ const QuizSimulator = () => {
               Try Again
             </button>
             <button
-              onClick={() => navigate('/education')}
+              onClick={handleReset}
               className="w-full py-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              ← Return to Dashboard
+              ← Back to Menu
             </button>
           </div>
         )}

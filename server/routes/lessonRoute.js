@@ -16,12 +16,22 @@ router.post('/generate', auth, async (req, res, next) => {
 
     const userPrompt = 'Generate a simplified learning module for the topic: "' + topic + '". Structure it explicitly as a JSON object matching this exact shape: {"courseTitle": "String", "subject": "Math|Physics|GST|COS|Chemistry|Biology|Engineering|Computer Science|Other", "description": "String", "tags": ["tag1", "tag2"], "modules": [{"moduleId": 1, "moduleTitle": "String", "content": "Step-by-step simplified explanations using plain text formulas...", "quiz": [{"question": "String", "options": ["A", "B", "C", "D"], "correctAnswer": "String"}]}]}';
 
-    const messageContent = await generateEducationalContent([
+    let messageContent = await generateEducationalContent([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
 
-    res.json(typeof messageContent === 'string' ? JSON.parse(messageContent) : messageContent);
+    if (!messageContent) {
+      return res.status(500).json({ error: 'Empty generation received from AI core.' });
+    }
+
+    let cleanJsonString = typeof messageContent === 'string' ? messageContent.trim() : JSON.stringify(messageContent);
+    const jsonBlockMatch = cleanJsonString.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonBlockMatch) {
+      cleanJsonString = jsonBlockMatch[1].trim();
+    }
+
+    res.json(JSON.parse(cleanJsonString));
   } catch (error) {
     console.error('AI Generation Route Error:', error.message);
     res.status(500).json({

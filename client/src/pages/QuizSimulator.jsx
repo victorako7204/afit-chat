@@ -22,7 +22,7 @@ const mdComponents = {
 const QuizSimulator = () => {
   const navigate = useNavigate();
   const [courseCode, setCourseCode] = useState('PHY102');
-  const [questionLimit, setQuestionLimit] = useState(10);
+  const [questionLimit, setQuestionLimit] = useState(0);
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
@@ -69,15 +69,6 @@ const QuizSimulator = () => {
     setScore(correct);
     setSubmitted(true);
   }, [questions, answers]);
-
-  const handleReset = useCallback(() => {
-    setIsQuizStarted(false);
-    setQuestions([]);
-    setAnswers({});
-    setSubmitted(false);
-    setScore(null);
-    setError(null);
-  }, []);
 
   if (!isQuizStarted) {
     return (
@@ -180,7 +171,7 @@ const QuizSimulator = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
             </svg>
             <p className="text-gray-500 font-medium">No questions loaded</p>
-            <button onClick={handleReset} className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+            <button onClick={() => { setIsQuizStarted(false); setQuestions([]); setAnswers({}); setSubmitted(false); setScore(null); setError(null); }} className="px-6 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
               ← Go Back
             </button>
           </div>
@@ -265,13 +256,13 @@ const QuizSimulator = () => {
         ) : (
           <div className="flex flex-col space-y-3">
             <button
-              onClick={handleReset}
+              onClick={() => { setIsQuizStarted(false); setQuestions([]); setAnswers({}); setSubmitted(false); setScore(null); setError(null); }}
               className="w-full py-3 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-500 rounded-lg hover:opacity-90 transition-opacity"
             >
               Try Again
             </button>
             <button
-              onClick={handleReset}
+              onClick={() => { setIsQuizStarted(false); setQuestions([]); setAnswers({}); setSubmitted(false); setScore(null); setError(null); }}
               className="w-full py-3 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               ← Back to Menu

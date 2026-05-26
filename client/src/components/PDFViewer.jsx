@@ -8,6 +8,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 const PDFViewer = ({ fileUrl, onClose }) => {
   const [numPages, setNumPages] = useState(null);
   const [containerWidth, setContainerWidth] = useState(window.innerWidth);
+  const [scale, setScale] = useState(1.0);
 
   useEffect(() => {
     const handleResize = () => setContainerWidth(window.innerWidth);
@@ -42,7 +43,7 @@ const PDFViewer = ({ fileUrl, onClose }) => {
   useEffect(() => {
     const style = document.createElement('style');
     style.id = 'pdf-viewer-canvas-fix';
-    style.textContent = `.react-pdf__Page__canvas { max-width: 100% !important; height: auto !important; }`;
+    style.textContent = `.react-pdf__Page__canvas { max-width: none !important; height: auto !important; margin: 0 auto; } .react-pdf__Page__textLayer { display: none !important; }`;
     document.head.appendChild(style);
     return () => {
       const el = document.getElementById('pdf-viewer-canvas-fix');
@@ -54,7 +55,7 @@ const PDFViewer = ({ fileUrl, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900 z-50 flex flex-col w-full h-full"
+      className="fixed inset-0 bg-slate-950 z-50 flex flex-col w-screen h-screen select-none"
       onContextMenu={handleContextMenu}
     >
       <button
@@ -71,7 +72,35 @@ const PDFViewer = ({ fileUrl, onClose }) => {
         {numPages ? `${numPages} page${numPages > 1 ? 's' : ''}` : ''}
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 w-full flex flex-col items-center justify-start scroll-smooth">
+      <div className="flex items-center justify-center gap-3 py-2 bg-slate-900/80 backdrop-blur-sm">
+        <button
+          onClick={() => setScale(prev => Math.max(prev - 0.2, 0.6))}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors"
+          aria-label="Zoom Out"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+          </svg>
+        </button>
+        <span className="text-white/70 text-xs font-mono w-12 text-center">{Math.round(scale * 100)}%</span>
+        <button
+          onClick={() => setScale(prev => Math.min(prev + 0.2, 3.0))}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white text-sm hover:bg-white/20 transition-colors"
+          aria-label="Zoom In"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+        <button
+          onClick={() => setScale(1.0)}
+          className="px-3 py-1.5 text-xs font-medium text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto overflow-x-auto p-2 w-full flex flex-col items-center justify-start">
         <Document
           file={fileUrl}
           onLoadSuccess={onLoadSuccess}
@@ -90,10 +119,10 @@ const PDFViewer = ({ fileUrl, onClose }) => {
             <Page
               key={i}
               pageNumber={i + 1}
-              width={containerWidth - 32}
+              width={(containerWidth - 16) * scale}
               renderTextLayer={true}
               renderAnnotationLayer={false}
-              className="shadow-xl rounded my-2 mx-auto max-w-full"
+              className="shadow-2xl rounded-sm my-3 border border-slate-700/50 transition-transform duration-100 ease-out max-w-none"
             />
           ))}
         </Document>

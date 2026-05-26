@@ -4,9 +4,11 @@ import { libraryAPI } from '../services/api';
 import { format } from 'date-fns';
 import { Button, Card, Input, Textarea, Modal } from '../components/UI';
 import PDFViewer from '../components/PDFViewer';
+import PastQuestionVault from '../components/PastQuestionVault';
 
 const Library = () => {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('books');
   const [resources, setResources] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,14 +115,35 @@ const Library = () => {
           <h1 className="text-2xl font-bold text-gray-900">Library</h1>
           <p className="text-gray-500 mt-1">Access and share study materials</p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
-          Upload PDF
-        </Button>
+        {activeTab === 'books' && (
+          <Button onClick={() => setShowModal(true)}>
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            Upload PDF
+          </Button>
+        )}
       </div>
 
+      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none">
+        <button
+          onClick={() => setActiveTab('books')}
+          className={`px-4 py-2 font-medium rounded-lg text-sm transition-all duration-200 shrink-0 ${activeTab === 'books' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+        >
+          Books & Resources
+        </button>
+        <button
+          onClick={() => setActiveTab('pq-vault')}
+          className={`px-4 py-2 font-medium rounded-lg text-sm transition-all duration-200 shrink-0 ${activeTab === 'pq-vault' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+        >
+          Past Questions Vault
+        </button>
+      </div>
+
+      {activeTab === 'pq-vault' && <PastQuestionVault />}
+
+      {activeTab === 'books' && (
+        <>
       <div className="mb-6">
         <select
           value={filter}
@@ -190,6 +213,8 @@ const Library = () => {
             </Card>
           ))}
         </div>
+      )}
+        </>
       )}
 
       {showPdfViewer && selectedPdfUrl && (

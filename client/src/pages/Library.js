@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { Button, Card, Input, Textarea, Modal } from '../components/UI';
 import PDFViewer from '../components/PDFViewer';
 import PastQuestionVault from '../components/PastQuestionVault';
+import { Upload, FileText, Eye, Trash2, BookOpen, Loader2 } from 'lucide-react';
 
 const Library = () => {
   const { user } = useAuth();
@@ -109,112 +110,118 @@ const Library = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Library</h1>
-          <p className="text-gray-500 mt-1">Access and share study materials</p>
-        </div>
+    <div className="flex flex-col min-h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <span className="text-lg font-bold">Library</span>
         {activeTab === 'books' && (
-          <Button onClick={() => setShowModal(true)}>
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Upload PDF
-          </Button>
+          <button
+            onClick={() => { setShowModal(true); fetchDepartments(); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+          >
+            <Upload size={14} />
+            Upload
+          </button>
         )}
       </div>
 
-      <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-none">
-        <button
-          onClick={() => setActiveTab('books')}
-          className={`px-4 py-2 font-medium rounded-lg text-sm transition-all duration-200 shrink-0 ${activeTab === 'books' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          Books & Resources
-        </button>
-        <button
-          onClick={() => setActiveTab('pq-vault')}
-          className={`px-4 py-2 font-medium rounded-lg text-sm transition-all duration-200 shrink-0 ${activeTab === 'pq-vault' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          Past Questions Vault
-        </button>
+      {/* Tabs */}
+      <div className="flex px-4 pb-0" style={{ borderBottom: '1px solid var(--border)' }}>
+        {['books', 'pq-vault'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="flex-1 py-2.5 text-xs font-semibold transition-colors relative"
+            style={{ color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-tertiary)' }}
+          >
+            {tab === 'books' ? 'Books & Resources' : 'Past Questions'}
+            {activeTab === tab && (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full" style={{ backgroundColor: 'var(--accent)' }} />
+            )}
+          </button>
+        ))}
       </div>
 
       {activeTab === 'pq-vault' && <PastQuestionVault />}
 
       {activeTab === 'books' && (
-        <>
-      <div className="mb-6">
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Departments</option>
-          {departments.map((dept) => (
-            <option key={dept} value={dept}>{dept}</option>
-          ))}
-        </select>
-      </div>
+        <div className="flex-1 overflow-y-auto px-4 pt-3 pb-8">
+          {/* Department filter */}
+          <div className="mb-4">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-lg"
+              style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
+          </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent" />
-        </div>
-      ) : resources.length === 0 ? (
-        <Card className="text-center py-12">
-          <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          <p className="mt-4 text-gray-500">No resources available</p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {resources.map((resource) => (
-            <Card key={resource._id} className="hover-lift">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 truncate">{resource.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{resource.description}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-indigo-600 font-medium">{resource.department}</span>
-                  <span className="text-gray-400">{format(new Date(resource.createdAt), 'MMM d')}</span>
-                </div>
-                <p className="text-xs text-gray-400 mt-1 truncate">Uploaded by {resource.uploadedBy?.name}</p>
-              </div>
-
-              <div className="flex gap-2 mt-4">
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleViewPdf(resource)}
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 size={24} className="animate-spin" style={{ color: 'var(--accent)' }} />
+            </div>
+          ) : resources.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center px-8">
+              <BookOpen size={40} style={{ color: 'var(--text-tertiary)' }} />
+              <p className="text-sm mt-3" style={{ color: 'var(--text-secondary)' }}>No resources available</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>Upload a PDF to get started</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {resources.map((resource) => (
+                <div
+                  key={resource._id}
+                  className="flex flex-col rounded-xl p-4"
+                  style={{ backgroundColor: 'var(--bg-secondary)' }}
                 >
-                  View
-                </Button>
-                {(resource.uploadedBy?._id === user._id || user.role === 'admin') && (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => handleDelete(resource._id)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-            </Card>
-          ))}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'rgba(0,149,246,0.15)' }}>
+                      <FileText size={20} style={{ color: 'var(--accent)' }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-semibold truncate">{resource.title}</h3>
+                      <p className="text-xs mt-1 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{resource.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium" style={{ color: 'var(--accent)' }}>{resource.department}</span>
+                      <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                        {format(new Date(resource.createdAt), 'MMM d')} · {resource.uploadedBy?.name}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewPdf(resource)}
+                        className="px-3 py-1.5 text-xs font-semibold rounded-lg"
+                        style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+                      >
+                        <Eye size={13} className="inline mr-1" />
+                        View
+                      </button>
+                      {(resource.uploadedBy?._id === user._id || user?.role === 'admin') && (
+                        <button
+                          onClick={() => handleDelete(resource._id)}
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg"
+                          style={{ backgroundColor: 'rgba(237,73,86,0.15)', color: 'var(--danger)' }}
+                        >
+                          <Trash2 size={13} className="inline" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-        </>
       )}
 
       {showPdfViewer && selectedPdfUrl && (
@@ -223,26 +230,15 @@ const Library = () => {
 
       <Modal
         isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setError('');
-        }}
+        onClose={() => { setShowModal(false); setError(''); }}
         title="Upload Resource"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button onClick={handleUpload} disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Upload'}
-            </Button>
-          </>
-        }
       >
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: 'rgba(237,73,86,0.1)', border: '1px solid var(--danger)' }}>
+            <p className="text-sm" style={{ color: 'var(--danger)' }}>{error}</p>
           </div>
         )}
-        <form onSubmit={handleUpload}>
+        <form onSubmit={handleUpload} className="space-y-4">
           <Input
             label="Title"
             value={newResource.title}
@@ -264,19 +260,26 @@ const Library = () => {
             placeholder="Brief description of the resource"
             rows={3}
           />
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              PDF File
-            </label>
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>PDF File</label>
             <input
               type="file"
               accept="application/pdf"
               onChange={handleFileChange}
-              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm rounded-lg"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
             />
             {newResource.file && (
-              <p className="mt-2 text-sm text-green-600">Selected: {newResource.file.name}</p>
+              <p className="mt-1.5 text-xs" style={{ color: 'var(--success)' }}>Selected: {newResource.file.name}</p>
             )}
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => { setShowModal(false); setError(''); }} className="px-4 py-2 text-sm font-semibold rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
+              Cancel
+            </button>
+            <button type="submit" disabled={uploading} className="px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5" style={{ backgroundColor: 'var(--accent)', color: 'white', opacity: uploading ? 0.5 : 1 }}>
+              {uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : 'Upload'}
+            </button>
           </div>
         </form>
       </Modal>

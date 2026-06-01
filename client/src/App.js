@@ -30,30 +30,24 @@ import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import LeaderboardPage from './pages/LeaderboardPage';
 
-export const ThemeContext = createContext({
-  darkMode: false,
-  toggleDarkMode: () => {}
-});
+export const ThemeContext = createContext({ darkMode: true, toggleDarkMode: () => {} });
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent" />
+      <div className="min-h-screen flex items-center justify-center" style={{backgroundColor:'var(--bg-primary)'}}>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--accent)] border-t-transparent" />
       </div>
     );
   }
-  
   return user ? children : <Navigate to="/login" />;
 };
 
+const MOBILE_ROUTES = ['/feed', '/direct-chat', '/public-chat', '/education', '/profile', '/dashboard', '/library', '/lost-and-found', '/anonymous-chat', '/groups', '/games', '/quiz', '/leaderboard', '/admin', '/arcade'];
+
 const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
-  const { darkMode } = useContext(ThemeContext);
-  const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true
-  );
+  const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -67,112 +61,61 @@ const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
     };
   }, []);
 
+  const location = useLocation();
+  const showNav = MOBILE_ROUTES.includes(location.pathname);
+
   return (
-    <div className="flex justify-center bg-gray-100">
-      <div className="relative w-full max-w-[500px] h-[100dvh] bg-white overflow-hidden scrollbar-none flex flex-col">
+    <div className="flex justify-center min-h-screen" style={{backgroundColor:'var(--bg-primary)'}}>
+      <div className="relative w-full max-w-[500px] h-[100dvh] overflow-hidden flex flex-col" style={{backgroundColor:'var(--bg-primary)'}}>
         {!isOnline && (
-          <div className="absolute top-0 left-0 right-0 z-[60] animate-slide-down bg-neutral-900 text-white text-xs py-2 text-center font-medium font-sans">
-            No Internet Connection. Displaying cached application context data.
+          <div className="absolute top-0 left-0 right-0 z-[60] animate-slide-down text-white text-xs py-2 text-center font-medium" style={{backgroundColor:'#ed4956'}}>
+            No Internet Connection
           </div>
         )}
-
-        <TopNav />
-
-        <main className="flex-1 overflow-y-auto scrollbar-none bg-white">
-          <div className="flex flex-col min-h-full pb-24 px-0">
+        {showNav && <TopNav />}
+        <main className="flex-1 overflow-y-auto scrollbar-none">
+          <div className="flex flex-col min-h-full">
             {children}
           </div>
         </main>
-
-        <BottomNav />
+        {showNav && <BottomNav />}
       </div>
     </div>
   );
+};
+
+const useLocation = () => {
+  const { pathname } = window.location;
+  return { pathname };
 };
 
 const App = () => {
   const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  });
   const [showSplash, setShowSplash] = useState(true);
+  const [location, setLocation] = useState({ pathname: window.location.pathname });
 
   useEffect(() => {
-    if (user?._id) {
-      connectSocket(user._id);
-    }
+    if (user?._id) connectSocket(user._id);
   }, [user?._id]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#000000');
 
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#020617');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#2563eb');
-    }
-  }, [darkMode]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const checkStandaloneMode = () => {
-      if (typeof window !== 'undefined' && window.matchMedia) {
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-        setIsInstalled(isStandalone);
-      }
-    };
-
-    checkStandaloneMode();
-
-    const handleBeforeInstallPrompt = (e) => {
-      if (typeof window === 'undefined') return;
-      
-      e.preventDefault();
-      console.log('beforeinstallprompt event captured');
-      
-      if (e) {
-        setDeferredPrompt(e);
-      }
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-      const mediaQuery = window.matchMedia('(display-mode: standalone)');
-      if (mediaQuery.addEventListener) {
-        mediaQuery.addEventListener('change', checkStandaloneMode);
-      }
-    }
-
+    const handleLocationChange = () => setLocation({ pathname: window.location.pathname });
+    window.addEventListener('popstate', handleLocationChange);
     const timer = setTimeout(() => setShowSplash(false), 1500);
-
     return () => {
       clearTimeout(timer);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-        
-        const mediaQuery = window.matchMedia('(display-mode: standalone)');
-        if (mediaQuery.removeEventListener) {
-          mediaQuery.removeEventListener('change', checkStandaloneMode);
-        }
-      }
+      window.removeEventListener('popstate', handleLocationChange);
     };
   }, []);
 
-  const toggleDarkMode = () => {
-    setDarkMode(prev => !prev);
-  };
-
-  const themeValue = { darkMode, toggleDarkMode };
+  const themeValue = { darkMode: true, toggleDarkMode: () => {} };
 
   return (
     <ThemeContext.Provider value={themeValue}>
@@ -182,15 +125,8 @@ const App = () => {
           <NotificationProvider>
             <GlobalAlert />
             <Routes>
-              <Route 
-                path="/login" 
-                element={user ? <Navigate to="/feed" /> : <Login />} 
-              />
-              <Route 
-                path="/register" 
-                element={user ? <Navigate to="/feed" /> : <Register />} 
-              />
-              
+              <Route path="/login" element={user ? <Navigate to="/feed" /> : <Login />} />
+              <Route path="/register" element={user ? <Navigate to="/feed" /> : <Register />} />
               <Route path="/dashboard" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Dashboard /></AppLayout></PrivateRoute>} />
               <Route path="/public-chat" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><PublicChat /></AppLayout></PrivateRoute>} />
               <Route path="/direct-chat" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><DirectChat /></AppLayout></PrivateRoute>} />
@@ -210,7 +146,6 @@ const App = () => {
               <Route path="/profile" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Profile /></AppLayout></PrivateRoute>} />
               <Route path="/profile/:id" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Profile /></AppLayout></PrivateRoute>} />
               <Route path="/leaderboard" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><LeaderboardPage /></AppLayout></PrivateRoute>} />
-              
               <Route path="/" element={<Navigate to={user ? "/feed" : "/login"} />} />
             </Routes>
           </NotificationProvider>

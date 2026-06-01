@@ -12,10 +12,13 @@ router.post('/generate', auth, async (req, res, next) => {
       return res.status(400).json({ message: 'Topic must be at least 3 characters' });
     }
 
+    console.log(`🔑 Key check: DEEPSEEK=${!!process.env.DEEPSEEK_API_KEY}, OPENROUTER=${!!process.env.OPENROUTER_API_KEY}`);
+
     if (!process.env.DEEPSEEK_API_KEY && !process.env.OPENROUTER_API_KEY) {
-      console.error('❌ No AI API key configured');
+      console.error('❌ No AI API key configured on Render. Add DEEPSEEK_API_KEY or OPENROUTER_API_KEY to Render env vars.');
       return res.status(503).json({
-        message: 'AI service is currently unavailable. No API key configured. Please contact the administrator.'
+        message: 'AI service is not configured. Please add DEEPSEEK_API_KEY to the server environment variables.',
+        detail: 'missing_api_keys'
       });
     }
 
@@ -141,6 +144,9 @@ STRICT REQUIREMENTS:
               fallback: true
             });
           }
+
+          console.error(`❌ All ${maxAttempts} AI attempts failed. Last error:`, lastError);
+          console.error(`🔑 Keys at failure: DEEPSEEK=${!!process.env.DEEPSEEK_API_KEY}, OPENROUTER=${!!process.env.OPENROUTER_API_KEY}`);
 
           return res.status(503).json({
             message: 'AI service is temporarily unavailable. Please try again later or create a module manually.',

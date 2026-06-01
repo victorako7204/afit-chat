@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { OnlineUsersProvider } from './context/OnlineUsersContext';
@@ -8,6 +8,8 @@ import { connectSocket } from './services/socket';
 import SplashScreen from './components/SplashScreen';
 import TopNav from './components/TopNav';
 import BottomNav from './components/BottomNav';
+import Sidebar from './components/Sidebar';
+import MoreDrawer from './components/MoreDrawer';
 import GlobalAlert from './components/GlobalAlert';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -29,6 +31,8 @@ import GameArcade from './pages/GameArcade';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import LeaderboardPage from './pages/LeaderboardPage';
+import Explore from './pages/Explore';
+import Notifications from './pages/Notifications';
 
 export const ThemeContext = createContext({ darkMode: true, toggleDarkMode: () => {} });
 
@@ -44,10 +48,16 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" />;
 };
 
-const MOBILE_ROUTES = ['/feed', '/direct-chat', '/public-chat', '/education', '/profile', '/dashboard', '/library', '/lost-and-found', '/anonymous-chat', '/groups', '/games', '/quiz', '/leaderboard', '/admin', '/arcade'];
+const MOBILE_ROUTES = [
+  '/feed', '/direct-chat', '/public-chat', '/education', '/profile',
+  '/dashboard', '/library', '/lost-and-found', '/anonymous-chat',
+  '/groups', '/games', '/quiz', '/leaderboard', '/admin', '/arcade',
+  '/explore', '/notifications'
+];
 
 const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -66,20 +76,37 @@ const AppLayout = ({ children, deferredPrompt, isInstalled }) => {
 
   return (
     <div className="flex justify-center min-h-screen" style={{backgroundColor:'var(--bg-primary)'}}>
-      <div className="relative w-full max-w-[500px] h-[100dvh] overflow-hidden flex flex-col" style={{backgroundColor:'var(--bg-primary)'}}>
+      {/* Desktop sidebar */}
+      <Sidebar />
+
+      {/* Main content area — offset by sidebar width on desktop */}
+      <div className="relative w-full md:ml-[var(--sidebar-width)] max-w-[935px] h-[100dvh] overflow-hidden flex flex-col mx-auto" style={{backgroundColor:'var(--bg-primary)'}}>
         {!isOnline && (
           <div className="absolute top-0 left-0 right-0 z-[60] animate-slide-down text-white text-xs py-2 text-center font-medium" style={{backgroundColor:'#ed4956'}}>
             No Internet Connection
           </div>
         )}
-        {showNav && <TopNav />}
+        {/* Mobile top nav only */}
+        {showNav && (
+          <div className="md:hidden">
+            <TopNav />
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto scrollbar-none">
           <div className="flex flex-col min-h-full">
             {children}
           </div>
         </main>
-        {showNav && <BottomNav />}
+        {/* Mobile bottom nav only */}
+        {showNav && (
+          <div className="md:hidden">
+            <BottomNav onMoreOpen={() => setMoreOpen(true)} />
+          </div>
+        )}
       </div>
+
+      {/* More drawer */}
+      <MoreDrawer isOpen={moreOpen} onClose={() => setMoreOpen(false)} />
     </div>
   );
 };
@@ -146,6 +173,8 @@ const App = () => {
               <Route path="/profile" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Profile /></AppLayout></PrivateRoute>} />
               <Route path="/profile/:id" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Profile /></AppLayout></PrivateRoute>} />
               <Route path="/leaderboard" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><LeaderboardPage /></AppLayout></PrivateRoute>} />
+              <Route path="/explore" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Explore /></AppLayout></PrivateRoute>} />
+              <Route path="/notifications" element={<PrivateRoute><AppLayout deferredPrompt={deferredPrompt} isInstalled={isInstalled}><Notifications /></AppLayout></PrivateRoute>} />
               <Route path="/" element={<Navigate to={user ? "/feed" : "/login"} />} />
             </Routes>
           </NotificationProvider>

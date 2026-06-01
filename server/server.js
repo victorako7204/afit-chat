@@ -1,4 +1,10 @@
 require('dotenv').config();
+
+console.log(`🔑 Startup key check: DEEPSEEK=${!!process.env.DEEPSEEK_API_KEY}, OPENROUTER=${!!process.env.OPENROUTER_API_KEY}`);
+if (!process.env.DEEPSEEK_API_KEY && !process.env.OPENROUTER_API_KEY) {
+  console.warn('⚠️ No AI API keys configured. Module generation will return 503.');
+}
+
 const express = require('express');
 const http = require('http');
 const path = require('path');

@@ -29,8 +29,13 @@ api.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       if (status === 503 || status === 504) {
-        console.warn('Server is waking up. Please try again in a moment.');
-        error.userMessage = 'Server is waking up. Please try again in a moment.';
+        if (data && data.message) {
+          console.warn('Server returned 503:', data.message);
+          error.userMessage = data.message;
+        } else {
+          console.warn('Server is waking up. Please try again in a moment.');
+          error.userMessage = 'Server is waking up. Please try again in a moment.';
+        }
       } else if (status === 401) {
         console.warn('Session expired. Please login again.');
         error.userMessage = 'Session expired. Please login again.';

@@ -32,6 +32,7 @@ router.post('/subscribe', auth, async (req, res) => {
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
       return res.status(400).json({ message: 'Invalid subscription data' });
     }
+    
 
     await PushSubscription.findOneAndUpdate(
       { userId: req.user.id },

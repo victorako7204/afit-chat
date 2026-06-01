@@ -37,6 +37,7 @@ try {
   console.log('Push notifications not available');
 }
 
+
 const app = express();
 const server = http.createServer(app);
 

@@ -6,7 +6,7 @@ import PDFViewer from './PDFViewer';
 const EXAM_TYPES = ['First Semester Exam', 'Second Semester Exam', 'Test', 'Quiz', 'Practice Sheet'];
 
 const PastQuestionVault = () => {
-  const { user } = useAuth();
+  useAuth();
   const [records, setRecords] = useState([]);
   const [filterCode, setFilterCode] = useState('');
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Heart, MessageCircle, PlusSquare, Search, User } from 'lucide-react';
+
 
 const TopNav = () => {
   const navigate = useNavigate();

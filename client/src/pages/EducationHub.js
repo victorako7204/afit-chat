@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { educationAPI } from '../services/api';
-import { Button, Input, Modal } from '../components/UI';
+import { Input, Modal } from '../components/UI';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -229,10 +229,6 @@ const EducationHub = () => {
 
   const viewCount = stats?.totalViews || 0;
   const moduleCount = stats?.totalModules || 0;
-
-  const filteredModules = (list) => {
-    return list || [];
-  };
 
   const renderModuleCard = (module) => {
     if (!module) return null;

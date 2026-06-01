@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { libraryAPI } from '../services/api';
 import { format } from 'date-fns';
-import { Button, Card, Input, Textarea, Modal } from '../components/UI';
+import { Input, Textarea, Modal } from '../components/UI';
 import PDFViewer from '../components/PDFViewer';
 import PastQuestionVault from '../components/PastQuestionVault';
 import { Upload, FileText, Eye, Trash2, BookOpen, Loader2 } from 'lucide-react';

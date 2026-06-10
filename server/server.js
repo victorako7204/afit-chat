@@ -56,6 +56,13 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3001'
 ];
 
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https:\/\/afit-chat.*\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -63,7 +70,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://afit-chat-server.onrender.com']
+      connectSrc: ["'self'", 'https://afit-chat-server.onrender.com', 'wss://afit-chat-server.onrender.com']
     }
   },
   hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -75,9 +82,18 @@ app.use(helmet({
 app.disable('x-powered-by');
 
 app.use(cors({
-  origin: ALLOWED_ORIGINS,
-  credentials: true
+  origin: function(origin, callback) {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Set-Cookie'],
+  maxAge: 86400
 }));
+
+app.options('*', cors());
 
 app.use(cookieParser());
 app.use(express.json());
@@ -85,9 +101,13 @@ app.use(express.urlencoded({ extended: true }));
 
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGINS,
+    origin: function(origin, callback) {
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      callback(new Error('Not allowed by CORS'));
+    },
     methods: ['GET', 'POST'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   },
   pingInterval: 30000,
   pingTimeout: 90000,

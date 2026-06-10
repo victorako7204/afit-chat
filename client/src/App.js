@@ -128,6 +128,17 @@ const App = () => {
   }, [user?._id]);
 
   useEffect(() => {
+    const API_URL = process.env.REACT_APP_API_URL;
+    if (!API_URL) return;
+    const keepAlive = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetch(`${API_URL}/health`, { method: 'GET', credentials: 'include' }).catch(() => {});
+      }
+    }, 10 * 60 * 1000);
+    return () => clearInterval(keepAlive);
+  }, []);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     document.documentElement.classList.add('dark');
     localStorage.setItem('theme', 'dark');

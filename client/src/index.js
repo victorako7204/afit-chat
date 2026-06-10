@@ -1,6 +1,5 @@
-/* eslint-disable */
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
@@ -17,13 +16,13 @@ if ('serviceWorker' in navigator && 'PushManager' in window) {
   });
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <StrictMode>
     <AuthProvider>
       <App onPushSetup={setupPushNotifications} />
     </AuthProvider>
-  </React.StrictMode>
+  </StrictMode>
 );
 
 document.addEventListener('DOMContentLoaded', () => {

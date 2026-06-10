@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, memo } from 'react';
 import { Heart, MessageCircle, Share2, Bookmark, Edit, Trash2, Loader2 } from 'lucide-react';
 
-const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'demo';
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
 
 const PostImage = memo(({ publicId, imageUrl, alt }) => {
   const [loaded, setLoaded] = useState(false);

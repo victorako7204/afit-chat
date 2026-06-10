@@ -29,7 +29,7 @@ const AdminDashboard = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/admin/users`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/admin/users`, {
         params: { limit: 100 }
       });
       setUsers(res.data.users || []);
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   const handleStatusChange = async (userId, newStatus, reason = null) => {
     setActionLoading(true);
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/admin/user-status`, {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/admin/user-status`, {
         targetUserId: userId,
         newStatus,
         reason
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
   const handleRoleChange = async (userId, newRole) => {
     setActionLoading(true);
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/admin/user-role`, {
+      await axios.patch(`${import.meta.env.VITE_API_URL}/admin/user-role`, {
         targetUserId: userId,
         newRole
       });

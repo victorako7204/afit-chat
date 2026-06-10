@@ -1,7 +1,7 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL ||
-  (process.env.NODE_ENV === 'production' ? 'https://afit-chat-server.onrender.com' : 'http://localhost:5000');
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.MODE === 'production' ? 'https://afit-chat-server.onrender.com' : 'http://localhost:5000');
 
 let socketInstance = null;
 let connectionStatus = 'disconnected';

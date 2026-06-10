@@ -128,7 +128,7 @@ const App = () => {
   }, [user?._id]);
 
   useEffect(() => {
-    const API_URL = process.env.REACT_APP_API_URL;
+    const API_URL = import.meta.env.VITE_API_URL;
     if (!API_URL) return;
     const keepAlive = setInterval(() => {
       if (document.visibilityState === 'visible') {

@@ -1,8 +1,21 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { ThemeContext } from '../App';
 import { Button, Input } from '../components/UI';
+
+const DEPARTMENTS = [
+  'Aerospace Engineering', 'Civil Engineering', 'Electrical Engineering',
+  'Mechanical Engineering', 'Computer Science', 'Cyber Security',
+  'Information Technology', 'Physics', 'Mathematics', 'GST', 'Other'
+];
+
+const PASSWORD_RULES = [
+  { label: '8+ characters', test: (pw) => pw.length >= 8 },
+  { label: '1 uppercase', test: (pw) => /[A-Z]/.test(pw) },
+  { label: '1 lowercase', test: (pw) => /[a-z]/.test(pw) },
+  { label: '1 number', test: (pw) => /[0-9]/.test(pw) },
+  { label: '1 symbol', test: (pw) => /[^A-Za-z0-9]/.test(pw) }
+];
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -10,188 +23,132 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    matricNo: '',
     department: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState('');
   const { register } = useAuth();
-  const { darkMode, toggleDarkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const isPasswordValid = PASSWORD_RULES.every(r => r.test(formData.password));
+  const passwordsMatch = formData.password === formData.confirmPassword;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    if (!isPasswordValid) {
+      setError('Password does not meet all requirements.');
       return;
     }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (!passwordsMatch) {
+      setError('Passwords do not match.');
       return;
     }
-
+    if (!formData.department) {
+      setError('Please select a department.');
+      return;
+    }
     setLoading(true);
-
     try {
-      await register(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.matricNo,
-        formData.department
-      );
-      navigate('/dashboard');
+      await register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        department: formData.department
+      });
+      navigate('/feed');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      const data = err.response?.data;
+      const msg = data?.error?.message || data?.message || 'Registration failed. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
+  const selectClasses = `w-full px-4 py-3 text-sm rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] 
+    text-[var(--text-primary)] placeholder-[var(--text-tertiary)] 
+    focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent
+    transition-all duration-200`;
+
   return (
-    <div className={`min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300 ${
-      darkMode ? 'bg-slate-900' : 'bg-gray-50'
-    }`}>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[var(--bg-primary)]">
       <div className="max-w-md w-full">
         <div className="text-center mb-8 animate-fade-in">
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={toggleDarkMode}
-              className={`p-2 rounded-lg transition-all duration-300 ${
-                darkMode 
-                  ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' 
-                  : 'bg-gray-100 text-slate-600 hover:bg-gray-200'
-              }`}
-            >
-              {darkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-          </div>
-          <h1 className={`text-4xl font-bold mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>Afit Chat</h1>
-          <p className={darkMode ? 'text-slate-400' : 'text-gray-500'}>Campus Communication Hub</p>
+          <h1 className="text-4xl font-bold mb-2 text-[var(--accent)]">Afit Chat</h1>
+          <p className="text-[var(--text-secondary)]">Campus Communication Hub</p>
         </div>
-
-        <div className={`rounded-2xl shadow-sm p-8 animate-scale-in transition-colors duration-300 ${
-          darkMode 
-            ? 'bg-slate-800/50 backdrop-blur-xl border border-slate-700/50' 
-            : 'bg-white border border-gray-200'
-        }`}>
+        <div className="rounded-2xl shadow-sm p-8 animate-scale-in bg-[var(--bg-secondary)] border border-[var(--border)]">
           <div className="mb-6">
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-gray-900'}`}>
-              Create account
-            </h2>
-            <p className={`mt-1 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-              Join the campus community
-            </p>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">Create account</h2>
+            <p className="mt-1 text-[var(--text-secondary)]">Join the campus community</p>
           </div>
-
           {error && (
-            <div className={`mb-6 p-4 rounded-lg border ${
-              darkMode 
-                ? 'bg-red-500/10 border-red-500/30' 
-                : 'bg-red-50 border-red-100'
-            }`}>
-              <p className={`text-sm ${darkMode ? 'text-red-400' : 'text-red-600'}`}>{error}</p>
+            <div className="mb-6 p-4 rounded-lg border bg-red-500/10 border-red-500/30">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              label="Full Name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="John Doe"
-              required
-              darkMode={darkMode}
-            />
+            <Input label="Full Name" name="name" value={formData.name}
+              onChange={handleChange} placeholder="John Doe" required />
 
-            <Input
-              label="Matric Number"
-              name="matricNo"
-              value={formData.matricNo}
-              onChange={handleChange}
-              placeholder="ENG/2020/001"
-              required
-              darkMode={darkMode}
-            />
+            <Input label="Email address" name="email" type="email" value={formData.email}
+              onChange={handleChange} placeholder="you@example.com" required />
 
-            <Input
-              label="Email address"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              darkMode={darkMode}
-            />
+            <div>
+              <label className="block text-sm font-medium mb-1.5 text-[var(--text-secondary)]">Department</label>
+              <select name="department" value={formData.department} onChange={handleChange}
+                className={selectClasses} required>
+                <option value="">Select department</option>
+                {DEPARTMENTS.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
 
-            <Input
-              label="Department"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              placeholder="Computer Science"
-              darkMode={darkMode}
-            />
+            <div>
+              <Input label="Password" name="password" type="password" value={formData.password}
+                onChange={handleChange} onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField('')} placeholder="Create a strong password" required />
+              {focusedField === 'password' && (
+                <div className="mt-2 space-y-1">
+                  {PASSWORD_RULES.map((rule, i) => {
+                    const passed = rule.test(formData.password);
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className={passed ? 'text-green-400' : 'text-[var(--text-tertiary)]'}>
+                          {passed ? '✓' : '○'}
+                        </span>
+                        <span className={passed ? 'text-green-400' : 'text-[var(--text-tertiary)]'}>
+                          {rule.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Min. 6 characters"
-              required
-              darkMode={darkMode}
-            />
+            <Input label="Confirm Password" name="confirmPassword" type="password"
+              value={formData.confirmPassword} onChange={handleChange}
+              placeholder="Confirm your password" required />
+            {formData.confirmPassword && !passwordsMatch && (
+              <p className="text-xs text-red-400 -mt-2">Passwords do not match</p>
+            )}
 
-            <Input
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-              darkMode={darkMode}
-            />
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-6"
-            >
+            <Button type="submit" disabled={loading} className="w-full mt-6">
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
-
           <div className="mt-6 text-center">
-            <p className={darkMode ? 'text-sm text-slate-400' : 'text-sm text-gray-500'}>
+            <p className="text-sm text-[var(--text-secondary)]">
               Already have an account?{' '}
-              <Link 
-                to="/login" 
-                className={`font-medium transition-colors ${
-                  darkMode 
-                    ? 'text-blue-400 hover:text-blue-300' 
-                    : 'text-blue-600 hover:text-blue-500'
-                }`}
-              >
+              <Link to="/login" className="font-medium text-[var(--accent)] hover:opacity-80">
                 Sign in
               </Link>
             </p>

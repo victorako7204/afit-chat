@@ -1,179 +1,246 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { chatAPI } from '../services/api';
-import { socket, connectSocket, joinRoom, leaveRoom } from '../services/socket';
-import { Button, Card, ChatBubble } from '../components/UI';
+import {
+  connectSocket, joinRoom, leaveRoom, sendMessageSocket,
+  listenToMessages, listenToMessageDeleted, listenToMessageEdited
+} from '../services/socket';
+import { Send, Loader2, Trash2 } from 'lucide-react';
 
 const AnonymousChat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [skip, setSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatId = 'anonymous-chat';
-  const LIMIT = 20;
+  const LIMIT = 50;
 
-  const fetchMessages = useCallback(async (loadMore = false) => {
-    if (loadMore) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
+  const fetchMessages = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await chatAPI.getMessages(chatId, LIMIT, loadMore ? skip : 0);
-      const { messages: newMessages, pagination } = res.data;
-
-      if (loadMore) {
-        setMessages((prev) => [...newMessages, ...prev]);
-        setSkip(skip + LIMIT);
-      } else {
-        setMessages(newMessages);
-        setSkip(LIMIT);
-      }
-
-      setHasMore(pagination.hasMore);
+      const res = await chatAPI.getMessages(chatId, LIMIT, 0);
+      const { messages: fetchedMessages, pagination } = res.data;
+      setMessages(fetchedMessages || []);
+      setHasMore(pagination?.hasMore || false);
     } catch (err) {
-      // Silently handle error
+      setError('Failed to load messages');
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
-  }, [chatId, skip]);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, []);
 
   useEffect(() => {
     connectSocket();
     joinRoom(chatId);
+    fetchMessages();
 
-    socket.on('receiveMessage', (message) => {
+    const handleNewMessage = (message) => {
       if (message.chatType === 'anonymous' && message.chatId === chatId) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          const exists = prev.some(m => m._id === message._id || m.tempId === message.tempId);
+          if (!exists) return [...prev, message];
+          return prev.map(m => (m.tempId === message.tempId && !m._id) ? { ...m, ...message } : m);
+        });
       }
-    });
+    };
+
+    const handleMessageDeleted = ({ messageId }) => {
+      setMessages(prev => prev.map(m =>
+        m._id === messageId ? { ...m, isDeleted: true, message: '' } : m
+      ));
+    };
+
+    const cleanupMessages = listenToMessages(handleNewMessage);
+    const cleanupDeleted = listenToMessageDeleted(handleMessageDeleted);
 
     return () => {
+      cleanupMessages?.();
+      cleanupDeleted?.();
       leaveRoom(chatId);
-      socket.off('receiveMessage');
     };
-  }, [chatId]);
-
-  useEffect(() => {
-    fetchMessages();
   }, [fetchMessages]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!loading && messages.length > 0) scrollToBottom();
+  }, [messages, loading, scrollToBottom]);
 
-  const loadOlderMessages = () => {
-    if (!loadingMore && hasMore) {
-      fetchMessages(true);
+  const loadOlderMessages = async () => {
+    if (loadingMore || !hasMore || messages.length === 0) return;
+    setLoadingMore(true);
+    try {
+      const oldest = messages[0];
+      const res = await chatAPI.getMessages(chatId, LIMIT, 0, oldest.createdAt);
+      const { messages: olderMessages, hasMore: more } = res.data?.data || res.data;
+      setMessages((prev) => [...(Array.isArray(olderMessages) ? olderMessages : []), ...prev]);
+      setHasMore(more);
+    } catch (err) {
+    } finally {
+      setLoadingMore(false);
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || sending) return;
 
+    if (newMessage.trim().length > 500) {
+      setError('Anonymous messages are limited to 500 characters');
+      return;
+    }
+
+    const tempId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const optimisticMsg = {
+      _id: tempId,
+      tempId,
+      senderName: 'Anonymous Student',
+      message: newMessage.trim(),
+      chatType: 'anonymous',
+      chatId,
+      status: 'sending',
+      createdAt: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, optimisticMsg]);
     setSending(true);
 
-    try {
-      const res = await chatAPI.sendAnonymousMessage({
-        chatId,
-        message: newMessage.trim(),
-        chatType: 'anonymous'
-      });
-      setMessages((prev) => [...prev, res.data.chat]);
-      setNewMessage('');
-      inputRef.current?.focus();
-    } catch (err) {
-      // Silently handle error
-    } finally {
-      setSending(false);
-    }
+    let settled = false;
+    const safetyTimeout = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        setMessages(prev => prev.map(m =>
+          m.tempId === tempId ? { ...m, status: 'failed' } : m
+        ));
+        setSending(false);
+      }
+    }, 15000);
+
+    sendMessageSocket({
+      chatId,
+      message: newMessage.trim(),
+      tempId,
+      onSent: (messageId) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(safetyTimeout);
+        setMessages(prev => prev.map(m =>
+          m.tempId === tempId ? { ...m, _id: messageId, status: 'sent', tempId: undefined } : m
+        ));
+        setSending(false);
+      },
+      onFailed: () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(safetyTimeout);
+        setMessages(prev => prev.map(m =>
+          m.tempId === tempId ? { ...m, status: 'failed' } : m
+        ));
+        setSending(false);
+      }
+    });
+
+    setNewMessage('');
+    inputRef.current?.focus();
   };
 
-  return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
-      <Card padding="none" className="overflow-hidden">
-        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-yellow-100 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Anonymous Chat</h2>
-              <p className="text-sm text-gray-600">Share your thoughts freely. Your identity is protected.</p>
-            </div>
-          </div>
-        </div>
+  if (loading && messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <Loader2 size={24} className="animate-spin" />
+      </div>
+    );
+  }
 
-        <div className="h-96 overflow-y-auto p-4 bg-gray-50">
-          {loading && messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-4 border-yellow-600 border-t-transparent mx-auto" />
-                <p className="mt-3 text-gray-500">Loading messages...</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {hasMore && (
-                <div className="text-center mb-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={loadOlderMessages}
-                    disabled={loadingMore}
-                  >
-                    {loadingMore ? 'Loading...' : 'View Older Messages'}
-                  </Button>
+  return (
+    <div className="flex flex-col h-full" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+        <h2 className="text-lg font-semibold">Anonymous Chat</h2>
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Share your thoughts freely. Your identity is protected.</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {error && (
+          <div className="text-center py-2">
+            <p style={{ color: 'var(--danger)' }} className="text-sm">{error}</p>
+          </div>
+        )}
+        {hasMore && messages.length > 0 && (
+          <div className="text-center mb-2">
+            <button
+              onClick={loadOlderMessages}
+              disabled={loadingMore}
+              className="px-4 py-1.5 text-xs font-semibold rounded-lg"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
+            >
+              {loadingMore ? 'Loading...' : 'View Older Messages'}
+            </button>
+          </div>
+        )}
+        {messages.map((msg, index) => {
+          const isDeleted = msg.isDeleted;
+          return (
+            <div key={msg._id || index} className="flex justify-start">
+              {isDeleted ? (
+                <div className="max-w-[80%] rounded-2xl px-4 py-2 text-sm italic" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>
+                  This message was deleted
+                </div>
+              ) : (
+                <div
+                  className="max-w-[80%] rounded-2xl px-4 py-2"
+                  style={{
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <p className="text-xs font-semibold mb-1" style={{ color: '#ffc107' }}>
+                    {msg.senderName || 'Anonymous Student'}
+                  </p>
+                  <p className="text-sm break-words">{msg.message}</p>
+                  <span className="text-[10px] opacity-70 float-right ml-2 mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                    {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </span>
                 </div>
               )}
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
 
-              {messages.map((msg, index) => (
-                <ChatBubble
-                  key={msg._id || index}
-                  message={msg.message}
-                  isOwn={false}
-                  isAnonymous={true}
-                  timestamp={new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                />
-              ))}
-              <div ref={messagesEndRef} />
-            </>
-          )}
+      <form onSubmit={handleSendMessage} className="p-3" style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-primary)' }}>
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Share something anonymously..."
+            maxLength={500}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none"
+            style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none' }}
+          />
+          <button
+            type="submit"
+            disabled={!newMessage.trim() || sending}
+            className="px-4 py-2.5 rounded-xl transition-opacity"
+            style={{ backgroundColor: '#ffc107', color: 'black', opacity: !newMessage.trim() || sending ? 0.4 : 1 }}
+          >
+            {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          </button>
         </div>
-
-        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-200">
-          <div className="flex gap-3">
-            <input
-              ref={inputRef}
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Share something anonymously..."
-              className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            />
-            <Button
-              type="submit"
-              disabled={!newMessage.trim() || sending}
-              className="bg-yellow-500 hover:bg-yellow-600"
-            >
-              {sending ? 'Sending...' : 'Send'}
-            </Button>
-          </div>
-        </form>
-      </Card>
+        <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>500 character limit. 1 message per 3 seconds.</p>
+      </form>
     </div>
   );
 };

@@ -4,20 +4,28 @@ const chatSchema = new mongoose.Schema({
   senderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    default: null
+    required: true,
+    index: true
   },
   senderName: {
     type: String,
-    default: 'Anonymous'
+    required: true
+  },
+  realSenderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   message: {
     type: String,
-    required: true
+    required: true,
+    maxLength: 2000
   },
   chatType: {
     type: String,
     enum: ['public', 'private', 'group', 'anonymous'],
-    default: 'public'
+    required: true,
+    index: true
   },
   chatId: {
     type: String,
@@ -42,14 +50,42 @@ const chatSchema = new mongoose.Schema({
     type: String,
     default: null
   },
-  deleted: {
+  status: {
+    type: String,
+    enum: ['sending', 'sent', 'delivered', 'read', 'failed'],
+    default: 'sent'
+  },
+  deliveredAt: {
+    type: Date,
+    default: null
+  },
+  readAt: {
+    type: Date,
+    default: null
+  },
+  editedAt: {
+    type: Date,
+    default: null
+  },
+  isDeleted: {
     type: Boolean,
     default: false
+  },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   }
 }, {
   timestamps: true
 });
 
 chatSchema.index({ chatId: 1, createdAt: -1 });
+chatSchema.index({ senderId: 1, status: 1 });
+chatSchema.index({ recipientId: 1, status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Chat', chatSchema);

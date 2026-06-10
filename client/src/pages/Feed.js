@@ -1,121 +1,330 @@
-/* eslint-disable */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Heart, MessageCircle, Send, Loader2, X, CornerUpLeft } from 'lucide-react';
-import { socket, connectSocket } from '../services/socket';
+import { Loader2, RefreshCw, WifiOff } from 'lucide-react';
+import { connectSocket, socket } from '../services/socket';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { postsAPI } from '../services/api';
 import PostCard from '../components/PostCard';
-import StoryBar from '../components/StoryBar';
+import CreatePostModal from '../components/CreatePostModal';
+import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
 const Feed = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
-  const [newPost, setNewPost] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isPosting, setIsPosting] = useState(false);
+  const [cursor, setCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [expandedComments, setExpandedComments] = useState(new Set());
   const [commentText, setCommentText] = useState({});
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [selectedPost, setSelectedPost] = useState(null);
-  const pendingPostIds = useRef(new Set());
-  const postsEndRef = useRef(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pendingActionQueue = useRef([]);
+  const postsRef = useRef(posts);
+
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
+
   const pullStartY = useRef(0);
   const isPulling = useRef(false);
+  const [pullDistance, setPullDistance] = useState(0);
   const contentRef = useRef(null);
 
-  const loadPosts = useCallback(async (pageNum = 1, append = false) => {
-    try {
-      if (pageNum === 1) setIsLoading(true);
-      else setIsLoadingMore(true);
-      const response = await api.get(`/posts?page=${pageNum}&limit=10`);
-      const { posts: newPosts, hasMore: more } = response.data;
-      const postsWithLikes = newPosts.map(p => ({
-        ...p, isLikedByUser: p.likes?.includes(user?._id) || false, likesCount: p.likes?.length || 0
-      }));
-      if (append) setPosts(prev => [...prev, ...postsWithLikes]);
-      else setPosts(postsWithLikes);
-      setHasMore(more !== undefined ? more : newPosts.length === 10);
-    } catch (err) { console.error('Load posts error:', err); }
-    finally { setIsLoading(false); setIsLoadingMore(false); }
-  }, [user?._id]);
-
-  useEffect(() => { loadPosts(); }, [loadPosts]);
-
-  useEffect(() => {
-    if (!socket) return;
-    const handleNewPost = (post) => {
-      if (pendingPostIds.current.has(post._id)) {
-        pendingPostIds.current.delete(post._id);
-        return;
-      }
-      setPosts(prev => [{
-        ...post, isLikedByUser: post.likes?.includes(user?._id) || false, likesCount: post.likes?.length || 0
-      }, ...prev]);
-    };
-    const handlePostUpdate = (updatedPost) => {
-      setPosts(prev => prev.map(p => p._id === updatedPost._id ? { ...p, ...updatedPost, isLikedByUser: updatedPost.likes?.includes(user?._id) || false, likesCount: updatedPost.likes?.length || 0 } : p));
-    };
-    socket.on('newPost', handleNewPost);
-    socket.on('postUpdated', handlePostUpdate);
-    return () => { socket.off('newPost', handleNewPost); socket.off('postUpdated', handlePostUpdate); };
-  }, [socket, user?._id]);
-
-  const handleCreatePost = async () => {
-    if (!newPost.trim() || isPosting) return;
-    setIsPosting(true);
-    try {
-      const localId = `temp-${Date.now()}`;
-      pendingPostIds.current.add(localId);
-      const response = await api.post('/posts', { content: newPost, isAnonymous });
-      setNewPost('');
-      setIsAnonymous(false);
-      setShowCreateModal(false);
-      loadPosts(1);
-    } catch (err) { console.error('Create post error:', err); }
-    finally { setIsPosting(false); }
-  };
-
-  const handleLike = async (postId) => {
-    const prev = [...posts];
-    setPosts(prev => prev.map(p => p._id === postId ? { ...p, isLikedByUser: !p.isLikedByUser, likesCount: p.isLikedByUser ? p.likesCount - 1 : p.likesCount + 1 } : p));
-    try { await api.post(`/posts/${postId}/like`); }
-    catch { setPosts(prev); }
-  };
-
-  const handleComment = async (postId) => {
-    if (!commentText[postId]?.trim()) return;
-    try {
-      await api.post(`/posts/${postId}/comment`, { text: commentText[postId] });
-      setCommentText(prev => ({ ...prev, [postId]: '' }));
-      loadPosts(1);
-    } catch (err) { console.error('Comment error:', err); }
-  };
-
-  const handleScroll = useCallback(() => {
-    if (!postsEndRef.current || isLoadingMore || !hasMore) return;
-    const { scrollTop, scrollHeight, clientHeight } = document.querySelector('.overflow-y-auto') || {};
-    if (scrollHeight - scrollTop - clientHeight < 300) {
-      setPage(prev => prev + 1);
+  const fetchPosts = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setIsRefreshing(true);
+    } else if (!cursor) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
     }
-  }, [isLoadingMore, hasMore]);
+
+    try {
+      const params = { limit: 10 };
+      if (!isRefresh && cursor) {
+        params.cursor = cursor;
+      }
+
+      const res = await postsAPI.getPosts(params);
+      const { posts: newPosts, nextCursor, hasMore: more } = res.data.data;
+
+      if (isRefresh) {
+        setPosts(newPosts);
+      } else if (!cursor) {
+        setPosts(newPosts);
+      } else {
+        setPosts(prev => {
+          const existingIds = new Set(prev.map(p => p._id));
+          const unique = newPosts.filter(p => !existingIds.has(p._id));
+          return [...prev, ...unique];
+        });
+      }
+
+      setCursor(nextCursor);
+      setHasMore(more);
+    } catch {
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+      setIsRefreshing(false);
+    }
+  }, [cursor]);
 
   useEffect(() => {
-    const el = document.querySelector('.overflow-y-auto');
-    if (el) { el.addEventListener('scroll', handleScroll); return () => el.removeEventListener('scroll', handleScroll); }
-  }, [handleScroll]);
+    fetchPosts();
+  }, []);
 
   useEffect(() => {
-    if (page > 1) loadPosts(page, true);
-  }, [page]);
+    connectSocket();
 
-  const [createOpen, setCreateOpen] = useState(false);
+    const handleNewPost = (post) => {
+      setPosts(prev => {
+        const exists = prev.some(p => p._id === post._id);
+        if (exists) return prev;
+        return [{ ...post, isLikedByUser: false, likeCount: post.likeCount || 0, commentCount: post.commentCount || 0 }, ...prev];
+      });
+    };
+
+    const handlePostDeleted = ({ postId }) => {
+      setPosts(prev => prev.filter(p => p._id !== postId));
+    };
+
+    const handlePostEdited = ({ _id, content, editedAt }) => {
+      setPosts(prev => prev.map(p =>
+        p._id === _id ? { ...p, content, editedAt } : p
+      ));
+    };
+
+    const handlePostLiked = ({ postId, likeCount }) => {
+      setPosts(prev => prev.map(p =>
+        p._id === postId ? { ...p, likeCount } : p
+      ));
+    };
+
+    const handleNewComment = ({ postId, comment }) => {
+      setPosts(prev => prev.map(p => {
+        if (p._id !== postId) return p;
+        const exists = p.comments?.some(c => c._id === comment._id);
+        if (exists) return p;
+        return {
+          ...p,
+          commentCount: (p.commentCount || 0) + 1,
+          comments: [...(p.comments || []).slice(0, 1), comment]
+        };
+      }));
+    };
+
+    socket.on('newPost', handleNewPost);
+    socket.on('postDeleted', handlePostDeleted);
+    socket.on('postEdited', handlePostEdited);
+    socket.on('postLiked', handlePostLiked);
+    socket.on('newComment', handleNewComment);
+
+    return () => {
+      socket.off('newPost', handleNewPost);
+      socket.off('postDeleted', handlePostDeleted);
+      socket.off('postEdited', handlePostEdited);
+      socket.off('postLiked', handlePostLiked);
+      socket.off('newComment', handleNewComment);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false);
+      const queue = [...pendingActionQueue.current];
+      pendingActionQueue.current = [];
+      queue.forEach(action => action());
+    };
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMore && !isLoadingMore && !isLoading) {
+      fetchPosts();
+    }
+  }, [hasMore, isLoadingMore, isLoading, fetchPosts]);
+
+  const sentinelRef = useInfiniteScroll({
+    onLoadMore: handleLoadMore,
+    hasMore,
+    isLoading: isLoadingMore
+  });
+
+  const handleRefresh = useCallback(() => {
+    setCursor(null);
+    fetchPosts(true);
+  }, [fetchPosts]);
+
+  const handleCreatePost = useCallback(async (formData, onSuccess) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    if (isOffline) {
+      pendingActionQueue.current.push(async () => {
+        try {
+          await postsAPI.createPost(formData);
+          handleRefresh();
+        } catch {
+        }
+      });
+      setIsSubmitting(false);
+      onSuccess?.();
+      return;
+    }
+
+    const tempId = `temp-${Date.now()}`;
+    const tempPost = {
+      _id: tempId,
+      authorName: formData.isAnonymous ? 'Anonymous' : (user?.name || 'Unknown'),
+      authorAvatar: formData.isAnonymous ? null : (user?.avatar || null),
+      authorDepartment: user?.department || '',
+      content: formData.content,
+      image: formData.image || null,
+      isAnonymous: formData.isAnonymous || false,
+      likeCount: 0,
+      commentCount: 0,
+      isLikedByUser: false,
+      createdAt: new Date().toISOString(),
+      editedAt: null,
+      isPending: true,
+      comments: []
+    };
+
+    setPosts(prev => [tempPost, ...prev]);
+
+    try {
+      const res = await postsAPI.createPost(formData);
+      setPosts(prev => prev.map(p =>
+        p._id === tempId ? { ...res.data.data, isPending: false } : p
+      ));
+      onSuccess?.();
+    } catch {
+      setPosts(prev => prev.map(p =>
+        p._id === tempId ? { ...p, isPending: false, isFailed: true } : p
+      ));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, isOffline, user, handleRefresh]);
+
+  const handleRetryPost = useCallback(async (post) => {
+    if (!post.isFailed) return;
+    setPosts(prev => prev.map(p =>
+      p._id === post._id ? { ...p, isPending: true, isFailed: false } : p
+    ));
+    try {
+      const res = await postsAPI.createPost({
+        content: post.content,
+        image: post.image,
+        isAnonymous: post.isAnonymous
+      });
+      setPosts(prev => prev.map(p =>
+        p._id === post._id ? { ...res.data.data, isPending: false } : p
+      ));
+    } catch {
+      setPosts(prev => prev.map(p =>
+        p._id === post._id ? { ...p, isPending: false, isFailed: true } : p
+      ));
+    }
+  }, []);
+
+  const handleLike = useCallback(async (postId) => {
+    const prevPosts = postsRef.current;
+    setPosts(prev => prev.map(p => {
+      if (p._id !== postId) return p;
+      const newLiked = !p.isLikedByUser;
+      return {
+        ...p,
+        isLikedByUser: newLiked,
+        likeCount: newLiked ? p.likeCount + 1 : Math.max(0, p.likeCount - 1)
+      };
+    }));
+
+    try {
+      const res = await postsAPI.likePost(postId);
+      setPosts(prev => prev.map(p =>
+        p._id === postId
+          ? { ...p, likeCount: res.data.data.likeCount, isLikedByUser: res.data.data.isLikedByUser }
+          : p
+      ));
+    } catch {
+      setPosts(prevPosts);
+    }
+  }, []);
+
+  const handleDeletePost = useCallback(async (postId) => {
+    setPosts(prev => prev.map(p => p._id === postId ? { ...p, isDeleting: true } : p));
+    try {
+      await postsAPI.deletePost(postId);
+      setPosts(prev => prev.filter(p => p._id !== postId));
+    } catch {
+      setPosts(prev => prev.map(p => p._id === postId ? { ...p, isDeleting: false } : p));
+    }
+  }, []);
+
+  const handleEditPost = useCallback(async (postId, content) => {
+    const res = await postsAPI.editPost(postId, content);
+    setPosts(prev => prev.map(p =>
+      p._id === postId ? { ...p, content: res.data.data.content, editedAt: res.data.data.editedAt } : p
+    ));
+  }, []);
+
+  const handleCommentToggle = useCallback((postId) => {
+    setExpandedComments(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  }, []);
+
+  const handleComment = useCallback(async (postId) => {
+    const text = commentText[postId]?.trim();
+    if (!text) return;
+
+    const tempComment = {
+      _id: `temp-${Date.now()}`,
+      authorName: user?.name || 'Unknown',
+      content: text,
+      createdAt: new Date().toISOString(),
+      isPending: true
+    };
+
+    setCommentText(prev => ({ ...prev, [postId]: '' }));
+    setPosts(prev => prev.map(p =>
+      p._id === postId
+        ? { ...p, comments: [...(p.comments || []), tempComment], commentCount: (p.commentCount || 0) + 1 }
+        : p
+    ));
+
+    try {
+      const res = await postsAPI.commentPost(postId, text, false);
+      setPosts(prev => prev.map(p =>
+        p._id === postId
+          ? {
+              ...p,
+              comments: p.comments.map(c => c._id === tempComment._id ? { ...res.data.data, isPending: false } : c),
+              commentCount: (p.commentCount || 0)
+            }
+          : p
+      ));
+    } catch {
+      setPosts(prev => prev.map(p =>
+        p._id === postId
+          ? { ...p, comments: p.comments.filter(c => c._id !== tempComment._id), commentCount: Math.max(0, (p.commentCount || 0) - 1) }
+          : p
+      ));
+    }
+  }, [commentText, user]);
 
   const handleTouchStart = (e) => {
     if (contentRef.current && contentRef.current.scrollTop <= 0) {
@@ -136,11 +345,8 @@ const Feed = () => {
     if (!isPulling.current) return;
     isPulling.current = false;
     if (pullDistance > 80) {
-      setIsRefreshing(true);
+      handleRefresh();
       setPullDistance(0);
-      loadPosts(1).finally(() => {
-        setIsRefreshing(false);
-      });
     } else {
       setPullDistance(0);
     }
@@ -149,12 +355,20 @@ const Feed = () => {
   const pullProgress = Math.min(pullDistance / 80, 1);
 
   return (
-    <div className="flex flex-col min-h-full" style={{backgroundColor:'var(--bg-primary)'}}
+    <div
+      className="flex flex-col min-h-full"
+      style={{ backgroundColor: 'var(--bg-primary)' }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Pull to refresh indicator */}
+      {isOffline && (
+        <div className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium" style={{ backgroundColor: 'rgba(255,193,7,0.15)', color: '#ffc107' }}>
+          <WifiOff size={14} />
+          You're offline. Changes will sync when connected.
+        </div>
+      )}
+
       <div
         className="flex items-center justify-center overflow-hidden transition-all"
         style={{
@@ -162,22 +376,15 @@ const Feed = () => {
           opacity: pullDistance > 0 || isRefreshing ? 1 : 0,
         }}
       >
-        <div
-          className={`flex items-center justify-center gap-2 ${isRefreshing ? '' : ''}`}
-          style={{ color: 'var(--accent)' }}
-        >
+        <div className="flex items-center justify-center gap-2" style={{ color: 'var(--accent)' }}>
           {isRefreshing ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
             <svg
               className="transition-transform"
               style={{ transform: `rotate(${pullProgress * 180}deg)` }}
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
+              width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2.5"
             >
               <path d="M1 4v6h6M23 20v-6h-6" />
               <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15" />
@@ -188,57 +395,26 @@ const Feed = () => {
           </span>
         </div>
       </div>
-      {/* Create Post Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{backgroundColor:'rgba(0,0,0,0.7)'}} onClick={() => setShowCreateModal(false)}>
-          <div className="w-full max-w-[500px] rounded-t-2xl overflow-hidden" style={{backgroundColor:'var(--bg-secondary)'}} onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-4 py-3" style={{borderBottom:'1px solid var(--border)'}}>
-              <button onClick={() => setShowCreateModal(false)} className="text-sm font-semibold" style={{color:'var(--text-secondary)'}}>Cancel</button>
-              <span className="text-sm font-semibold">New Post</span>
-              <button onClick={handleCreatePost} disabled={!newPost.trim() || isPosting} className="text-sm font-semibold" style={{color: newPost.trim() ? 'var(--accent)' : 'var(--text-tertiary)'}}>
-                {isPosting ? 'Posting...' : 'Share'}
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0" style={{backgroundColor:'var(--bg-tertiary)'}}>
-                  <div className="w-full h-full flex items-center justify-center text-xs font-bold" style={{backgroundColor:'var(--accent)',color:'white'}}>
-                    {user?.name?.[0] || 'U'}
-                  </div>
-                </div>
-                <textarea
-                  value={newPost}
-                  onChange={e => setNewPost(e.target.value)}
-                  placeholder="What's on your mind?"
-                  className="flex-1 resize-none text-sm leading-relaxed bg-transparent border-none outline-none"
-                  style={{color:'var(--text-primary)', minHeight:120}}
-                  rows={5}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-4 pt-3" style={{borderTop:'1px solid var(--border)'}}>
-                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{color:'var(--text-secondary)'}}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                  </svg>
-                  Add Image
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{color:'var(--text-secondary)'}}>
-                  <input type="checkbox" checked={isAnonymous} onChange={e => setIsAnonymous(e.target.checked)} className="sr-only" />
-                  <div className={`w-9 h-5 rounded-full transition-colors relative ${isAnonymous ? 'bg-[var(--accent)]' : 'bg-[var(--bg-tertiary)]'}`}>
-                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${isAnonymous ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
-                  </div>
-                  Anonymous
-                </label>
-              </div>
+
+      <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-colors"
+          style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+        >
+          <div className="w-7 h-7 rounded-full overflow-hidden shrink-0" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+            <div className="w-full h-full flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+              {user?.name?.[0] || 'U'}
             </div>
           </div>
-        </div>
-      )}
+          What's on your mind?
+        </button>
+      </div>
 
       {isLoading ? (
         <div className="flex flex-col">
-          {[1,2,3].map(i => (
-            <div key={i} className="flex flex-col gap-3 p-4" style={{borderBottom:'1px solid var(--border)'}}>
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex flex-col gap-3 p-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full skeleton" />
                 <div className="w-24 h-3 rounded skeleton" />
@@ -254,28 +430,84 @@ const Feed = () => {
         </div>
       ) : (
         <div className="flex flex-col" ref={contentRef}>
-          <StoryBar users={posts.filter(p => p.authorId).map(p => p.authorId).filter((v,i,a) => a.findIndex(t => t?._id === v?._id) === i).slice(0, 10)} />
           {posts.map(post => (
-            <PostCard
-              key={post._id}
-              post={post}
-              onLike={handleLike}
-              onComment={(id) => setExpandedComments(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
-              currentUserId={user?._id}
-              onUserClick={(id) => window.location.href = `/profile/${id}`}
-            />
+            <div key={post._id} className="relative">
+              <PostCard
+                post={post}
+                onLike={handleLike}
+                onComment={handleCommentToggle}
+                onDelete={handleDeletePost}
+                onEdit={handleEditPost}
+                currentUserId={user?._id}
+              />
+              {post.isFailed && (
+                <div className="flex items-center justify-center gap-2 px-4 py-2" style={{ backgroundColor: 'rgba(255,0,0,0.05)' }}>
+                  <span className="text-xs" style={{ color: 'var(--danger)' }}>Failed to post.</span>
+                  <button
+                    onClick={() => handleRetryPost(post)}
+                    className="text-xs font-semibold flex items-center gap-1"
+                    style={{ color: 'var(--accent)' }}
+                  >
+                    <RefreshCw size={12} /> Retry
+                  </button>
+                </div>
+              )}
+              {expandedComments.has(post._id) && (
+                <div className="px-4 py-2 space-y-2" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                  {post.comments?.map(comment => (
+                    <div key={comment._id} className="flex items-start gap-2 text-sm">
+                      <span className="font-semibold text-xs shrink-0">{comment.authorName}</span>
+                      <span className="text-xs" style={{ color: 'var(--text-primary)' }}>
+                        {comment.content}
+                        {comment.isPending && (
+                          <Loader2 size={10} className="animate-spin inline ml-1" />
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); handleComment(post._id); }}
+                    className="flex gap-2 mt-2"
+                  >
+                    <input
+                      value={commentText[post._id] || ''}
+                      onChange={e => setCommentText(prev => ({ ...prev, [post._id]: e.target.value }))}
+                      placeholder="Add a comment..."
+                      className="flex-1 px-3 py-1.5 text-xs rounded-lg outline-none"
+                      style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-primary)' }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!commentText[post._id]?.trim()}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                      style={{ backgroundColor: 'var(--accent)', color: 'white', opacity: commentText[post._id]?.trim() ? 1 : 0.4 }}
+                    >
+                      Post
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           ))}
           {isLoadingMore && (
             <div className="flex justify-center py-6">
-              <Loader2 className="animate-spin" size={24} style={{color:'var(--accent)'}} />
+              <Loader2 className="animate-spin" size={24} style={{ color: 'var(--accent)' }} />
             </div>
           )}
           {!hasMore && posts.length > 0 && (
-            <p className="text-center text-xs py-6" style={{color:'var(--text-tertiary)'}}>No more posts</p>
+            <p className="text-center text-xs py-6" style={{ color: 'var(--text-tertiary)' }}>No more posts</p>
           )}
-          <div ref={postsEndRef} />
+          <div ref={sentinelRef} className="h-4" />
         </div>
       )}
+
+      <CreatePostModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreatePost}
+        user={user}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };

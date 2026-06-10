@@ -1,38 +1,46 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import axios from 'axios';
 import { socket } from '../services/socket';
+import { authAPI } from '../services/api';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const fetchProfile = useCallback(async () => {
+  const fetchUser = useCallback(async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/auth/profile`);
-      setUser(res.data.user);
+      const res = await authAPI.me();
+      setUser(res.data.data.user);
+      setIsAuthenticated(true);
+      return true;
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      logout();
-    } finally {
-      setLoading(false);
+      setUser(null);
+      setIsAuthenticated(false);
+      return false;
     }
   }, []);
 
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, [token, fetchProfile]);
+    const init = async () => {
+      const success = await fetchUser();
+      if (!success) {
+        try {
+          await authAPI.refresh();
+          await fetchUser();
+        } catch (e) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      }
+      setIsLoading(false);
+    };
+    init();
+  }, [fetchUser]);
 
   useEffect(() => {
     if (!user) return;
-
     const handleStatusUpdate = (data) => {
       if (data.status === 'suspended') {
         alert(`Your account has been suspended. Reason: ${data.reason || 'No reason provided'}`);
@@ -45,17 +53,14 @@ export const AuthProvider = ({ children }) => {
         setUser(prev => ({ ...prev, status: 'active' }));
       }
     };
-
     const handleRoleUpdate = (data) => {
       setUser(prev => ({ ...prev, role: data.role }));
       if (data.role === 'admin') {
-        alert('Congratulations! You have been granted Admin privileges. Please refresh the page.');
+        alert('Congratulations! You have been granted Admin privileges.');
       }
     };
-
     socket.on('accountStatusUpdate', handleStatusUpdate);
     socket.on('accountRoleUpdate', handleRoleUpdate);
-
     return () => {
       socket.off('accountStatusUpdate', handleStatusUpdate);
       socket.off('accountRoleUpdate', handleRoleUpdate);
@@ -63,43 +68,30 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const login = async (email, password) => {
-    const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/login`, {
-      email,
-      password
-    });
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return user;
+    const res = await authAPI.login(email, password);
+    setUser(res.data.data.user);
+    setIsAuthenticated(true);
+    return res.data.data.user;
   };
 
-  const register = async (name, email, password, matricNo, department) => {
-    const res = await axios.post(`${process.env.REACT_APP_API_URL}/auth/register`, {
-      name,
-      email,
-      password,
-      matricNo,
-      department
-    });
-    const { token, user } = res.data;
-    localStorage.setItem('token', token);
-    setToken(token);
-    setUser(user);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    return user;
+  const register = async (data) => {
+    const res = await authAPI.register(data);
+    setUser(res.data.data.user);
+    setIsAuthenticated(true);
+    return res.data.data.user;
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (e) {
+    }
     setUser(null);
-    delete axios.defaults.headers.common['Authorization'];
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -107,10 +99,8 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };

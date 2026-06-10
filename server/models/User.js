@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+const refreshTokenSchema = new mongoose.Schema({
+  tokenHash: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -99,7 +105,20 @@ const userSchema = new mongoose.Schema({
       max: 5,
       default: 3
     }
-  }]
+  }],
+  refreshTokens: [refreshTokenSchema],
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockUntil: {
+    type: Date,
+    default: null
+  },
+  passwordChangedAt: {
+    type: Date,
+    default: null
+  }
 }, {
   timestamps: true
 });
@@ -110,6 +129,7 @@ userSchema.index({ currentStreak: -1 });
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
@@ -153,7 +173,6 @@ userSchema.statics.getLeaderboard = async function(type = 'all', limit = 10) {
   let sortField = 'points';
   if (type === 'wins') sortField = 'totalWins';
   if (type === 'streak') sortField = 'longestStreak';
-  
   return this.find()
     .sort({ [sortField]: -1, totalWins: -1 })
     .limit(limit)
@@ -190,6 +209,84 @@ userSchema.statics.checkNotSuspended = async function(userId) {
   if (user.isSuspended()) {
     throw new Error(`Account suspended: ${user.suspensionReason}`);
   }
+  return user;
+};
+
+userSchema.methods.incLoginAttempts = async function() {
+  this.loginAttempts += 1;
+  if (this.loginAttempts >= 5) {
+    this.lockUntil = Date.now() + 15 * 60 * 1000;
+  }
+  await this.save();
+  return this;
+};
+
+userSchema.methods.resetLoginAttempts = async function() {
+  this.loginAttempts = 0;
+  this.lockUntil = null;
+  await this.save();
+  return this;
+};
+
+userSchema.methods.isLocked = function() {
+  if (!this.lockUntil) return false;
+  if (new Date() > this.lockUntil) {
+    return false;
+  }
+  return true;
+};
+
+userSchema.methods.addRefreshToken = async function(tokenHash, expiresAt) {
+  this.refreshTokens.push({ tokenHash, createdAt: new Date(), expiresAt });
+  if (this.refreshTokens.length > 10) {
+    this.refreshTokens = this.refreshTokens.slice(-10);
+  }
+  await this.save();
+  return this;
+};
+
+userSchema.methods.removeRefreshToken = async function(tokenHash) {
+  this.refreshTokens = this.refreshTokens.filter(
+    t => t.tokenHash !== tokenHash
+  );
+  await this.save();
+  return this;
+};
+
+userSchema.methods.removeAllRefreshTokens = async function() {
+  this.refreshTokens = [];
+  await this.save();
+  return this;
+};
+
+userSchema.methods.isPasswordChangedAfter = function(jwtTimestamp) {
+  if (!this.passwordChangedAt) return false;
+  return Math.floor(this.passwordChangedAt.getTime() / 1000) > jwtTimestamp;
+};
+
+userSchema.statics.findByCredentials = async function(email, password) {
+  const user = await this.findOne({ email: email.toLowerCase() }).select('+matricNo');
+  if (!user) {
+    const error = new Error('Invalid email or password');
+    error.code = 'INVALID_CREDENTIALS';
+    throw error;
+  }
+  if (user.isLocked()) {
+    const remainingMs = user.lockUntil.getTime() - Date.now();
+    const remainingMin = Math.ceil(remainingMs / 60000);
+    const error = new Error(`Account locked. Try again in ${remainingMin} minute(s).`);
+    error.code = 'ACCOUNT_LOCKED';
+    error.remainingMinutes = remainingMin;
+    throw error;
+  }
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    await user.incLoginAttempts();
+    const error = new Error('Invalid email or password');
+    error.code = 'INVALID_CREDENTIALS';
+    throw error;
+  }
+  await user.resetLoginAttempts();
   return user;
 };
 

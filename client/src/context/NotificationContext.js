@@ -1,67 +1,14 @@
-/* eslint-disable */
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { socket } from '../services/socket';
+import { socket, listenToMessages } from '../services/socket';
 import { useAuth } from './AuthContext';
+import { chatAPI } from '../services/api';
 
 export const NotificationContext = createContext();
-
-const STORAGE_KEY = 'afit_unread_messages';
-
-const loadFromStorage = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveToStorage = (data) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Failed to save unread messages to storage:', e);
-  }
-};
-
-const fetchFromAPI = async (url, options = {}) => {
-  const token = localStorage.getItem('token');
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}${url}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '',
-        ...options.headers
-      }
-    });
-    if (!response.ok) return { unreadCount: 0 };
-    return response.json();
-  } catch (e) {
-    console.warn('fetchFromAPI error:', e.message);
-    return { unreadCount: 0 };
-  }
-};
 
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
   const [unreadMessages, setUnreadMessages] = useState({});
   const [currentChatPartner, setCurrentChatPartner] = useState(null);
-
-  useEffect(() => {
-    if (user?._id) {
-      const stored = loadFromStorage();
-      setUnreadMessages(stored);
-    } else {
-      setUnreadMessages({});
-    }
-  }, [user?._id]);
-
-  useEffect(() => {
-    if (Object.keys(unreadMessages).length > 0) {
-      saveToStorage(unreadMessages);
-    }
-  }, [unreadMessages]);
 
   const getUnreadCount = useCallback((senderId) => {
     if (!senderId || !unreadMessages) return 0;
@@ -82,26 +29,7 @@ export const NotificationProvider = ({ children }) => {
     setUnreadMessages((prev) => {
       if (!prev || typeof prev !== 'object') return { [sid]: 1 };
       const current = prev[sid] || 0;
-      const updated = { ...prev, [sid]: current + 1 };
-      saveToStorage(updated);
-      return updated;
-    });
-  }, []);
-
-  const decrementUnread = useCallback((senderId) => {
-    if (!senderId) return;
-    const sid = String(senderId);
-    setUnreadMessages((prev) => {
-      if (!prev || typeof prev !== 'object') return {};
-      const newUnread = { ...prev };
-      if (newUnread[sid] && newUnread[sid] > 0) {
-        newUnread[sid] -= 1;
-        if (newUnread[sid] <= 0) {
-          delete newUnread[sid];
-        }
-      }
-      saveToStorage(newUnread);
-      return newUnread;
+      return { ...prev, [sid]: current + 1 };
     });
   }, []);
 
@@ -112,36 +40,39 @@ export const NotificationProvider = ({ children }) => {
       if (!prev || typeof prev !== 'object') return {};
       const newUnread = { ...prev };
       delete newUnread[sid];
-      saveToStorage(newUnread);
       return newUnread;
     });
   }, []);
 
   const clearAllUnread = useCallback(() => {
     setUnreadMessages({});
-    saveToStorage({});
   }, []);
 
   const setCurrentChatPartnerWithClear = useCallback((partner) => {
     setCurrentChatPartner(partner);
     if (partner?._id) {
       clearUnread(partner._id);
-      fetchFromAPI(`/chat/unread/clear/${partner._id}`, { method: 'PUT' }).catch(console.error);
     }
   }, [clearUnread]);
 
   const fetchUnreadFromServer = useCallback(async () => {
     if (!user?._id) return;
     try {
-      const data = await fetchFromAPI('/chat/unread/count');
-      if (typeof data.unreadCount === 'number') {
-        setUnreadMessages({ serverCount: data.unreadCount });
-        saveToStorage({ serverCount: data.unreadCount });
+      const data = await chatAPI.getUnreadCount();
+      if (typeof data?.data?.unreadCount === 'number') {
+        setUnreadMessages({ serverCount: data.data.unreadCount });
       }
     } catch (error) {
-      console.error('Failed to fetch unread count from server:', error);
     }
   }, [user?._id]);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages({});
+      return;
+    }
+    fetchUnreadFromServer();
+  }, [user, fetchUnreadFromServer]);
 
   useEffect(() => {
     if (!user) {
@@ -151,36 +82,21 @@ export const NotificationProvider = ({ children }) => {
 
     const handleReceiveMessage = (data) => {
       if (!data || !data.senderId) return;
-      
-      const senderId = String(data.senderId);
+
+      const senderId = String(data.senderId?._id || data.senderId);
       const currentUserId = String(user._id);
       const isSelfMessage = senderId === currentUserId;
       const isCurrentChat = currentChatPartner && String(currentChatPartner._id) === senderId;
-      
+
       if (!isSelfMessage && !isCurrentChat) {
         incrementUnread(senderId);
       }
     };
 
-    const handleNewMessageNotification = (data) => {
-      if (!data || !data.senderId) return;
-      
-      const senderId = String(data.senderId);
-      const currentUserId = String(user._id);
-      const isSelfMessage = senderId === currentUserId;
-      const isCurrentChat = currentChatPartner && String(currentChatPartner._id) === senderId;
-      
-      if (!isSelfMessage && !isCurrentChat) {
-        incrementUnread(senderId);
-      }
-    };
-
-    socket.on('receiveMessage', handleReceiveMessage);
-    socket.on('newMessageNotification', handleNewMessageNotification);
+    socket.on('newMessage', handleReceiveMessage);
 
     return () => {
-      socket.off('receiveMessage', handleReceiveMessage);
-      socket.off('newMessageNotification', handleNewMessageNotification);
+      socket.off('newMessage', handleReceiveMessage);
     };
   }, [user, currentChatPartner, incrementUnread]);
 
@@ -191,7 +107,6 @@ export const NotificationProvider = ({ children }) => {
         getUnreadCount,
         getTotalUnread,
         incrementUnread,
-        decrementUnread,
         clearUnread,
         clearAllUnread,
         fetchUnreadFromServer,
@@ -207,7 +122,7 @@ export const NotificationProvider = ({ children }) => {
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within an NotificationProvider');
+    throw new Error('useNotifications must be used within a NotificationProvider');
   }
   return context;
 };

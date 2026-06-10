@@ -6,101 +6,95 @@ const conversationSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   }],
-  lastMessage: {
+  chatId: {
     type: String,
-    default: ''
+    required: true,
+    unique: true
   },
-  lastMessageAt: {
-    type: Date,
-    default: Date.now
+  type: {
+    type: String,
+    enum: ['private', 'group'],
+    required: true
+  },
+  groupId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Group',
+    default: null
+  },
+  lastMessage: {
+    content: { type: String, default: '' },
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    senderName: { type: String, default: '' },
+    sentAt: { type: Date, default: null }
   },
   unreadCount: {
     type: Map,
     of: Number,
     default: {}
   },
-  lastMessageBy: {
+  isPinned: {
+    type: Boolean,
+    default: false
+  },
+  mutedBy: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null
-  }
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });
 
 conversationSchema.index({ participants: 1 });
 
-conversationSchema.methods.incrementUnread = async function(targetUserId) {
-  const userIdStr = String(targetUserId);
-  const current = this.unreadCount.get(userIdStr) || 0;
-  this.unreadCount.set(userIdStr, current + 1);
-  await this.save();
-};
+conversationSchema.statics.findOrCreateDM = async function(userId1, userId2) {
+  const sorted = [String(userId1), String(userId2)].sort();
+  const chatId = `dm:${sorted[0]}:${sorted[1]}`;
 
-conversationSchema.methods.clearUnread = async function(targetUserId) {
-  const userIdStr = String(targetUserId);
-  this.unreadCount.set(userIdStr, 0);
-  await this.save();
-};
+  let conversation = await this.findOne({ chatId });
 
-conversationSchema.methods.getUnreadCount = function(userId) {
-  const userIdStr = String(userId);
-  return this.unreadCount.get(userIdStr) || 0;
-};
-
-conversationSchema.statics.findOrCreateByParticipants = async function(userId1, userId2) {
-  const participants = [String(userId1), String(userId2)].sort();
-  
-  let conversation = await this.findOne({
-    participants: { $all: participants.map(id => new mongoose.Types.ObjectId(id)) }
-  });
-  
   if (!conversation) {
     conversation = await this.create({
-      participants: participants.map(id => new mongoose.Types.ObjectId(id)),
+      participants: sorted.map(id => new mongoose.Types.ObjectId(id)),
+      chatId,
+      type: 'private',
       unreadCount: {}
     });
   }
-  
+
   return conversation;
 };
 
-conversationSchema.statics.incrementUnreadForUser = async function(chatId, targetUserId) {
-  const userIdStr = String(targetUserId);
-  
-  await this.findByIdAndUpdate(
-    chatId,
-    { 
-      $inc: { [`unreadCount.${userIdStr}`]: 1 },
-      $set: { lastMessageAt: new Date() }
-    },
-    { upsert: true, new: true }
-  );
-};
-
-conversationSchema.statics.clearUnreadForUser = async function(chatId, targetUserId) {
-  const userIdStr = String(targetUserId);
-  
-  await this.findByIdAndUpdate(
-    chatId,
-    { $set: { [`unreadCount.${userIdStr}`]: 0 } },
+conversationSchema.statics.incrementUnread = async function(chatId, userId) {
+  const userIdStr = String(userId);
+  await this.findOneAndUpdate(
+    { chatId },
+    { $inc: { [`unreadCount.${userIdStr}`]: 1 } },
     { upsert: true }
   );
 };
 
-conversationSchema.statics.getUnreadForUser = async function(userId) {
+conversationSchema.statics.clearUnread = async function(chatId, userId) {
   const userIdStr = String(userId);
-  const conversations = await this.find({
-    participants: userId
-  }).select('unreadCount');
-  
-  let total = 0;
-  conversations.forEach(conv => {
-    const count = conv.unreadCount?.get?.(userIdStr) || 0;
-    total += count;
-  });
-  
-  return total;
+  await this.findOneAndUpdate(
+    { chatId },
+    { $set: { [`unreadCount.${userIdStr}`]: 0 } }
+  );
+};
+
+conversationSchema.statics.updateLastMessage = async function(chatId, messageData) {
+  await this.findOneAndUpdate(
+    { chatId },
+    {
+      $set: {
+        lastMessage: {
+          content: messageData.content,
+          senderId: messageData.senderId,
+          senderName: messageData.senderName,
+          sentAt: messageData.sentAt || new Date()
+        }
+      }
+    }
+  );
 };
 
 module.exports = mongoose.model('Conversation', conversationSchema);

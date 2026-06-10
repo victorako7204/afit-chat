@@ -1,18 +1,36 @@
+const crypto = require('crypto');
 const Module = require('../models/Module');
 const { generateEducationalContent } = require('../services/aiContentService');
 
 const generateModule = async (req, res, next) => {
+  const requestId = crypto.randomUUID();
+  const startTime = Date.now();
+
   try {
     const { topic } = req.body;
 
     if (!topic || typeof topic !== 'string' || topic.trim().length < 3) {
-      return res.status(400).json({ message: 'Topic must be at least 3 characters' });
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_TOPIC', message: 'Topic must be at least 3 characters' }
+      });
     }
 
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.error('❌ No OPENROUTER_API_KEY configured');
+    if (topic.trim().length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_TOPIC', message: 'Topic must be under 100 characters' }
+      });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not configured');
       return res.status(503).json({
-        message: 'AI service is currently unavailable. No API key configured. Please contact the administrator.'
+        success: false,
+        error: {
+          code: 'AI_NOT_CONFIGURED',
+          message: 'AI service is not configured. Please add GEMINI_API_KEY to the server environment variables.'
+        }
       });
     }
 
@@ -32,140 +50,68 @@ const generateModule = async (req, res, next) => {
       await existingModule.save();
 
       return res.json({
-        message: 'Module found in cache',
-        module: existingModule,
+        success: true,
+        data: { module: existingModule },
         cached: true
       });
     }
 
-    let generatedCourse;
-    let attempts = 0;
-    const maxAttempts = 3;
-    let lastError = null;
+    const result = await generateEducationalContent(topic, {
+      userId: req.user._id,
+      requestId
+    });
 
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`🔄 Qwen generation attempt ${attempts + 1}/${maxAttempts}`);
-
-        const rawText = await generateEducationalContent([
-          {
-            role: "system",
-            content: "You are the AFIT Academic Engine. You must return a strict JSON object matching the exact requested structural schema. Do not include markdown code block formatting or introductory text."
-          },
-          {
-            role: "user",
-            content: `Generate a simplified learning module for the topic: "${topic}". Structure it explicitly as a JSON object with this shape:
-      {
-        "courseTitle": "String",
-        "subject": "Math|Physics|GST|COS|Chemistry|Biology|Engineering|Computer Science|Other",
-        "description": "String",
-        "tags": ["tag1", "tag2"],
-        "modules": [
-          {
-            "moduleId": 1,
-            "moduleTitle": "String",
-            "content": "Step-by-step simplified explanations using LaTeX where appropriate (e.g. $E = mc^2$, $\\\\frac{dy}{dx}$)...",
-            "quiz": [
-              {
-                "question": "String",
-                "options": ["A", "B", "C", "D"],
-                "correctAnswer": "String"
-              }
-            ]
-          }
-        ]
-      }`
-          }
-        ]);
-        console.log("📥 Raw Qwen response length:", rawText?.length);
-
-        generatedCourse = JSON.parse(rawText);
-
-        if (generatedCourse && generatedCourse.courseTitle && Array.isArray(generatedCourse.modules) && generatedCourse.modules.length > 0) {
-          console.log('✅ Course generated successfully');
-          break;
-        } else {
-          console.log('⚠️ Invalid course structure, retrying...');
-        }
-
-        attempts++;
-      } catch (apiError) {
-        attempts++;
-        lastError = apiError.message;
-        console.error(`❌ Qwen API call attempt ${attempts} failed:`, apiError.message);
-
-        if (attempts >= maxAttempts) {
-          console.log('❌ All Qwen attempts failed. Searching for similar modules...');
-
-          const similarModules = await Module.find({
-            isPublic: true,
-            $or: [
-              { title: { $regex: escapedTopic.split(' ')[0], $options: 'i' } },
-              { tags: { $in: normalizedTopic.split(' ') } },
-              { subject: { $in: ['Math', 'Physics', 'Engineering', 'Computer Science'] } }
-            ]
-          }).sort({ views: -1 }).limit(3);
-
-          if (similarModules.length > 0) {
-            const fallbackModule = similarModules[0];
-            fallbackModule.views = (fallbackModule.views || 0) + 1;
-            await fallbackModule.save();
-
-            return res.json({
-              message: 'AI service had issues. Here is a similar module:',
-              module: fallbackModule,
-              cached: true,
-              fallback: true
-            });
-          }
-
-          return res.status(503).json({
-            message: 'AI service is temporarily unavailable. Please try again later or create a module manually.',
-            error: lastError
-          });
-        }
-      }
-    }
-
-    if (!generatedCourse || !generatedCourse.courseTitle || !Array.isArray(generatedCourse.modules)) {
-      return res.status(500).json({
-        message: 'Failed to generate module content. Please try a different topic.'
+    if (!result.success) {
+      console.error(`[${requestId}] Generation failed:`, result.error);
+      return res.status(result.error.code === 'RATE_LIMITED' ? 429 : 503).json({
+        success: false,
+        error: result.error
       });
     }
 
+    const moduleData = result.data;
+
     const module = new Module({
-      title: generatedCourse.courseTitle || topic.trim(),
-      subject: generatedCourse.subject || 'Other',
-      description: generatedCourse.description || `AI-generated module on ${topic}`,
-      tags: generatedCourse.tags || [topic.trim().toLowerCase()],
-      stages: generatedCourse.modules.map(mod => ({
-        moduleId: mod.moduleId || undefined,
-        heading: mod.moduleTitle || 'Untitled Stage',
-        content: mod.content || '',
-        quiz: (mod.quiz || []).map(q => ({
+      title: moduleData.title || topic.trim(),
+      subject: moduleData.subject || 'Other',
+      description: moduleData.description || `AI-generated module on ${topic}`,
+      tags: [topic.trim().toLowerCase()],
+      stages: (moduleData.stages || []).map((stage, index) => ({
+        moduleId: index + 1,
+        heading: stage.heading || `Stage ${index + 1}`,
+        content: stage.content || '',
+        quiz: (stage.quiz || []).map(q => ({
           question: q.question || '',
           options: Array.isArray(q.options) ? q.options : [],
-          answer: q.correctAnswer || q.options?.[0] || ''
+          answer: q.answer || q.options?.[0] || ''
         }))
       })),
-      creator: req.user?._id,
-      creatorName: 'AI-Qwen',
+      creator: req.user._id,
+      creatorName: 'AI-Gemini',
       isPublic: true,
       isVerified: false,
-      views: 0
+      views: 0,
+      aiProvider: result.provider || 'gemini',
+      aiModel: result.model || 'gemini-3.5-flash',
+      aiGeneratedAt: new Date(),
+      isAIGenerated: true,
+      generationRequestId: requestId
     });
 
     await module.save();
     await module.populate('creator', 'name');
 
+    const elapsed = Date.now() - startTime;
+    console.log(`[${requestId}] Module generated in ${elapsed}ms via ${result.model}`);
+
     res.status(201).json({
-      message: 'Module generated and saved successfully',
-      module,
+      success: true,
+      data: { module },
       cached: false
     });
 
   } catch (error) {
-    console.error('Error generating module:', error);
+    console.error(`[${requestId}] Error generating module:`, error);
     next(error);
   }
 };
@@ -255,7 +201,8 @@ const createManualModule = async (req, res, next) => {
       creatorName: req.user.name || 'Student',
       isPublic: true,
       isVerified: false,
-      views: 0
+      views: 0,
+      isAIGenerated: false
     });
 
     await module.save();

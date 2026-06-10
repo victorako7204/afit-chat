@@ -41,13 +41,22 @@ const EducationHub = () => {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [generateTopic, setGenerateTopic] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState('');
   const [enrolledModules, setEnrolledModules] = useState([]);
   const [myModules, setMyModules] = useState([]);
   const [expandedQuiz, setExpandedQuiz] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [toast, setToast] = useState(null);
+  const generateAbortRef = useRef(null);
+  const generateDebounceRef = useRef(null);
 
   const searchTimeoutRef = useRef(null);
   const filterScrollRef = useRef(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const fetchModules = useCallback(async (subject, search) => {
     setLoading(true);
@@ -123,49 +132,75 @@ const EducationHub = () => {
 
   const handleGenerateModule = async () => {
     if (!generateTopic.trim() || !user) return;
-    setGenerating(true);
 
-    const generateWithRetry = async (retries = 2) => {
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          const res = await educationAPI.generateModule(generateTopic.trim());
-          if (res.data?.module) {
-            setModules(prev => [res.data.module, ...prev]);
-            setShowGenerateModal(false);
-            setGenerateTopic('');
-            setSelectedModule(res.data.module);
-            setShowPlayerModal(true);
-            fetchStats();
-            fetchMyModules();
-            return { success: true };
-          }
-        } catch (err) {
-          console.error(`Generate attempt ${attempt} failed:`, err);
-          if (err?.response?.status === 503 && attempt < retries) {
-            const waitTime = attempt * 3000;
-            console.log(`Server waking up, retrying in ${waitTime}ms...`);
-            await new Promise(r => setTimeout(r, waitTime));
-          } else {
-            const errorMsg = err?.response?.data?.message ||
-                           err?.userMessage ||
-                           'Failed to generate module';
-            return { success: false, error: errorMsg };
-          }
-        }
-      }
-      return { success: false, error: 'Failed after multiple attempts. Please try again.' };
-    };
+    if (generateTopic.trim().length < 3) {
+      showToast('Topic must be at least 3 characters', 'error');
+      return;
+    }
+    if (generateTopic.trim().length > 100) {
+      showToast('Topic must be under 100 characters', 'error');
+      return;
+    }
+
+    if (generating) return;
+
+    setGenerating(true);
+    setGenerationProgress('Validating topic...');
+
+    const controller = new AbortController();
+    generateAbortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const result = await generateWithRetry(2);
-      if (!result.success) {
-        alert(result.error);
+      const res = await educationAPI.generateModule(
+        { topic: generateTopic.trim() },
+        { signal: controller.signal }
+      );
+      clearTimeout(timeoutId);
+
+      if (res.data?.success) {
+        setModules(prev => [res.data.data.module, ...prev]);
+        setShowGenerateModal(false);
+        setGenerateTopic('');
+        setSelectedModule(res.data.data.module);
+        setShowPlayerModal(true);
+        fetchStats();
+        fetchMyModules();
+        showToast('Module generated successfully!', 'success');
+      } else {
+        showToast(res.data?.error?.message || 'Generation failed', 'error');
       }
     } catch (err) {
-      console.error('Error generating module:', err);
-      alert(err?.response?.data?.message || err?.userMessage || 'Failed to generate module');
+      clearTimeout(timeoutId);
+
+      if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        showToast('Generation timed out. Please try again.', 'error');
+      } else if (err.response?.data?.error?.code === 'RATE_LIMITED') {
+        showToast('Too many requests. Please wait before generating again.', 'warning');
+      } else if (err.response?.data?.error?.code === 'AI_UNAVAILABLE') {
+        showToast('AI service is busy. Please try again in a few minutes.', 'warning');
+      } else if (err.response?.data?.error?.code === 'CONTENT_REJECTED') {
+        showToast('Generated content violated safety guidelines. Please try a different topic.', 'warning');
+      } else {
+        showToast(err.response?.data?.error?.message || err.response?.data?.message || 'Failed to generate module', 'error');
+      }
     } finally {
       setGenerating(false);
+      setGenerationProgress('');
+      generateAbortRef.current = null;
+    }
+  };
+
+  const handleCancelGenerate = () => {
+    if (generateAbortRef.current) {
+      generateAbortRef.current.abort();
+    }
+  };
+
+  const handleGenerateTopicChange = (value) => {
+    setGenerateTopic(value);
+    if (generateDebounceRef.current) {
+      clearTimeout(generateDebounceRef.current);
     }
   };
 
@@ -856,6 +891,20 @@ const EducationHub = () => {
         </div>
       )}
 
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 max-w-sm animate-slide-down"
+          style={{
+            backgroundColor: toast.type === 'success' ? 'var(--success)' :
+              toast.type === 'error' ? 'var(--danger)' :
+              toast.type === 'warning' ? '#f59e0b' : 'var(--accent)',
+            color: 'white'
+          }}
+        >
+          <span className="text-sm font-medium">{toast.message}</span>
+        </div>
+      )}
+
       {/* AI Generate Modal */}
       <Modal
         isOpen={showGenerateModal}
@@ -868,17 +917,35 @@ const EducationHub = () => {
             Enter a topic and our AI will generate a comprehensive 5-stage educational module with quizzes.
           </p>
 
-          <Input
-            value={generateTopic}
-            onChange={(e) => setGenerateTopic(e.target.value)}
-            placeholder="e.g., Introduction to Differential Equations"
-            disabled={generating}
-          />
+          <div>
+            <Input
+              value={generateTopic}
+              onChange={(e) => handleGenerateTopicChange(e.target.value)}
+              placeholder="e.g., Introduction to Differential Equations"
+              disabled={generating}
+              maxLength={100}
+            />
+            <div className="flex justify-between mt-1">
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Min 3 characters
+              </span>
+              <span className="text-xs" style={{ color: generateTopic.length > 100 ? 'var(--danger)' : 'var(--text-tertiary)' }}>
+                {generateTopic.length}/100
+              </span>
+            </div>
+          </div>
+
+          {generating && generationProgress && (
+            <div className="flex items-center gap-2 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--accent)' }} />
+              <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{generationProgress}</span>
+            </div>
+          )}
 
           <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
             <h4 className="font-medium text-sm mb-2" style={{ color: 'var(--accent)' }}>What you'll get:</h4>
             <ul className="text-xs space-y-1" style={{ color: 'var(--text-secondary)' }}>
-              <li>• 5 comprehensive stages with detailed content</li>
+              <li>• 3-5 comprehensive stages with detailed content</li>
               <li>• LaTeX formulas for mathematical expressions</li>
               <li>• Quiz questions with multiple choice answers</li>
               <li>• Automatically saved to the public gallery</li>
@@ -886,16 +953,35 @@ const EducationHub = () => {
           </div>
 
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowGenerateModal(false)} className="px-4 py-2 text-sm font-semibold rounded-lg" style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
-              Cancel
+            <button onClick={() => { setShowGenerateModal(false); if (generating) handleCancelGenerate(); }}
+              className="px-4 py-2 text-sm font-semibold rounded-lg"
+              style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
+              {generating ? 'Cancel' : 'Close'}
             </button>
-            <button onClick={handleGenerateModule} disabled={!generateTopic.trim() || generating} className="px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5" style={{ backgroundColor: 'var(--accent)', color: 'white', opacity: !generateTopic.trim() || generating ? 0.5 : 1 }}>
-              {generating ? (
-                <><Loader2 size={14} className="animate-spin" /> Generating...</>
-              ) : (
-                'Generate'
-              )}
-            </button>
+            {generating ? (
+              <button
+                onClick={handleCancelGenerate}
+                className="px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5"
+                style={{ backgroundColor: 'var(--danger)', color: 'white' }}
+              >
+                <X size={14} />
+                Stop Generation
+              </button>
+            ) : (
+              <button
+                onClick={handleGenerateModule}
+                disabled={!generateTopic.trim() || generateTopic.trim().length < 3 || generateTopic.trim().length > 100}
+                className="px-4 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5"
+                style={{
+                  backgroundColor: 'var(--accent)',
+                  color: 'white',
+                  opacity: !generateTopic.trim() || generateTopic.trim().length < 3 || generateTopic.trim().length > 100 ? 0.5 : 1
+                }}
+              >
+                <Sparkles size={14} />
+                Generate
+              </button>
+            )}
           </div>
         </div>
       </Modal>

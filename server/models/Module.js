@@ -60,7 +60,29 @@ const moduleSchema = new mongoose.Schema({
   tags: [{
     type: String,
     trim: true
-  }]
+  }],
+  aiProvider: {
+    type: String,
+    default: 'gemini'
+  },
+  aiModel: {
+    type: String,
+    default: 'gemini-3.5-flash'
+  },
+  aiGeneratedAt: {
+    type: Date
+  },
+  isAIGenerated: {
+    type: Boolean,
+    default: false
+  },
+  generationRequestId: {
+    type: String
+  },
+  rawResponse: {
+    type: String,
+    select: false
+  }
 }, {
   timestamps: true
 });
@@ -69,7 +91,7 @@ moduleSchema.index({ title: 'text', description: 'text', tags: 'text' });
 
 moduleSchema.pre('save', function(next) {
   if (this.isNew && !this.creator) {
-    this.creatorName = 'AI-Qwen';
+    this.creatorName = 'AI-Gemini';
   }
   next();
 });

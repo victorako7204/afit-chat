@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { socket, listenToMessages } from '../services/socket';
+import { socket } from '../services/socket';
 import { useAuth } from './AuthContext';
 import { chatAPI } from '../services/api';
 

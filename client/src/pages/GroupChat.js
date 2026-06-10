@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { groupAPI, chatAPI } from '../services/api';
 import {
   connectSocket, joinRoom, leaveRoom, sendMessageSocket,
-  listenToMessages, listenToMessageDeleted, listenToMessageEdited
+  listenToMessages, listenToMessageDeleted
 } from '../services/socket';
 import { Send, Loader2, CornerUpLeft, X } from 'lucide-react';
 
@@ -21,10 +21,8 @@ const GroupChat = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', description: '', department: '' });
   const [regeneratingCode, setRegeneratingCode] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -33,7 +31,6 @@ const GroupChat = () => {
   const chatRoomId = `group:${groupId}`;
 
   const isAdmin = group?.admins?.some(a => a._id === user?._id) || false;
-  const isMember = group?.members?.some(m => m._id === user?._id) || false;
   const isLocked = group?.isLocked || false;
   const canSendMessage = !isLocked || isAdmin;
 
@@ -171,19 +168,6 @@ const GroupChat = () => {
     inputRef.current?.focus();
   };
 
-  const handleToggleLock = async () => {
-    if (!group || actionLoading) return;
-    setActionLoading(true);
-    try {
-      const res = await groupAPI.toggleLock(group._id);
-      const updated = res.data?.data?.group || res.data?.group || res.data;
-      setGroup(updated);
-    } catch (err) {
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const handleCopyInviteLink = async () => {
     if (!group?.inviteCode) return;
     const inviteLink = `${window.location.origin}/groups?invite=${group.inviteCode}`;
@@ -205,18 +189,6 @@ const GroupChat = () => {
     } catch (err) {
     } finally {
       setActionLoading(false);
-    }
-  };
-
-  const handleRegenerateInviteCode = async () => {
-    if (!group || regeneratingCode) return;
-    setRegeneratingCode(true);
-    try {
-      const res = await groupAPI.regenerateInviteCode(group._id);
-      setGroup(prev => ({ ...prev, inviteCode: res.data?.data?.inviteCode || res.data?.inviteCode }));
-    } catch (err) {
-    } finally {
-      setRegeneratingCode(false);
     }
   };
 

@@ -8,7 +8,7 @@ import {
   listenToTyping, listenToReadReceipts, emitTyping, emitMarkRead,
   emitDeleteMessage, setSocketUser
 } from '../services/socket';
-import { CornerUpLeft, X, UserPlus, Search, Trash2, Check, CheckCheck, Loader2 } from 'lucide-react';
+import { CornerUpLeft, X, Search, Trash2, Check, CheckCheck, Loader2 } from 'lucide-react';
 
 const DirectChat = () => {
   const { user } = useAuth();
@@ -24,7 +24,6 @@ const DirectChat = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [showConvList, setShowConvList] = useState(true);
   const [typingUsers, setTypingUsers] = useState({});
-  const [readByUser, setReadByUser] = useState({});
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -59,7 +58,6 @@ const DirectChat = () => {
     setLoading(true);
     setShowConvList(false);
     setReplyingTo(null);
-    setReadByUser({});
 
     if (user && selectedUserData) {
       const chatId = generateChatId(user._id, selectedUserData._id);

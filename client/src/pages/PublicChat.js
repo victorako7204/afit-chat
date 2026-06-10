@@ -4,7 +4,7 @@ import { chatAPI } from '../services/api';
 import {
   connectSocket, joinRoom, leaveRoom, sendMessageSocket,
   listenToMessages, listenToMessageDeleted, listenToMessageEdited,
-  listenToTyping, emitTyping, emitMarkRead, emitDeleteMessage
+  listenToTyping, emitTyping, emitDeleteMessage
 } from '../services/socket';
 import { CornerUpLeft, X, Pin, Trash2, Send, Loader2, MessageCircle, Check, CheckCheck } from 'lucide-react';
 

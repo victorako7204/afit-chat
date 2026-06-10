@@ -6,7 +6,6 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
 let socketInstance = null;
 let connectionStatus = 'disconnected';
 let pendingMessages = new Map();
-let roomListeners = new Map();
 let statusListeners = [];
 
 export const socket = {

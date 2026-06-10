@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function useInfiniteScroll({ onLoadMore, hasMore, isLoading, threshold = 300 }) {
   const sentinelRef = useRef(null);

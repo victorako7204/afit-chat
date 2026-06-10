@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { chatAPI } from '../services/api';
 import {
   connectSocket, joinRoom, leaveRoom, sendMessageSocket,
-  listenToMessages, listenToMessageDeleted, listenToMessageEdited
+  listenToMessages, listenToMessageDeleted
 } from '../services/socket';
-import { Send, Loader2, Trash2 } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 
 const AnonymousChat = () => {
   const [messages, setMessages] = useState([]);

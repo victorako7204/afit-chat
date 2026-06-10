@@ -10,7 +10,7 @@ let pendingMessages = new Map();
 let roomListeners = new Map();
 let statusListeners = [];
 
-const socket = {
+export const socket = {
   on: (event, callback) => {
     if (socketInstance) socketInstance.on(event, callback);
   },
